@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,11 @@
 package org.springframework.web.servlet.mvc;
 
 import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.BeanNameAware;
-import org.springframework.lang.Nullable;
-import org.springframework.util.Assert;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.util.WebUtils;
 
@@ -41,7 +38,7 @@ import org.springframework.web.util.WebUtils;
  * <p><b>Example:</b> web.xml, mapping all "/myservlet" requests to a Spring dispatcher.
  * Also defines a custom "myServlet", but <i>without</i> servlet mapping.
  *
- * <pre class="code">
+ * <pre>
  * &lt;servlet&gt;
  *   &lt;servlet-name&gt;myServlet&lt;/servlet-name&gt;
  *   &lt;servlet-class&gt;mypackage.TestServlet&lt;/servlet-class&gt;
@@ -62,7 +59,7 @@ import org.springframework.web.util.WebUtils;
  * configured HandlerInterceptor chain (e.g. an OpenSessionInViewInterceptor).
  * From the servlet point of view, everything will work as usual.
  *
- * <pre class="code">
+ * <pre>
  * &lt;bean id="urlMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping"&gt;
  *   &lt;property name="interceptors"&gt;
  *     &lt;list&gt;
@@ -83,21 +80,16 @@ import org.springframework.web.util.WebUtils;
  * @author Juergen Hoeller
  * @since 1.1.1
  * @see ServletWrappingController
- * @see org.springframework.orm.jpa.support.OpenEntityManagerInViewInterceptor
- * @see org.springframework.orm.jpa.support.OpenEntityManagerInViewFilter
+ * @see org.springframework.orm.hibernate3.support.OpenSessionInViewInterceptor
+ * @see org.springframework.orm.hibernate3.support.OpenSessionInViewFilter
+ * @see org.springframework.orm.jdo.support.OpenPersistenceManagerInViewInterceptor
+ * @see org.springframework.orm.jdo.support.OpenPersistenceManagerInViewFilter
  */
 public class ServletForwardingController extends AbstractController implements BeanNameAware {
 
-	@Nullable
 	private String servletName;
 
-	@Nullable
 	private String beanName;
-
-
-	public ServletForwardingController() {
-		super(false);
-	}
 
 
 	/**
@@ -109,7 +101,6 @@ public class ServletForwardingController extends AbstractController implements B
 		this.servletName = servletName;
 	}
 
-	@Override
 	public void setBeanName(String name) {
 		this.beanName = name;
 		if (this.servletName == null) {
@@ -122,13 +113,10 @@ public class ServletForwardingController extends AbstractController implements B
 	protected ModelAndView handleRequestInternal(HttpServletRequest request, HttpServletResponse response)
 			throws Exception {
 
-		ServletContext servletContext = getServletContext();
-		Assert.state(servletContext != null, "No ServletContext");
-		RequestDispatcher rd = servletContext.getNamedDispatcher(this.servletName);
+		RequestDispatcher rd = getServletContext().getNamedDispatcher(this.servletName);
 		if (rd == null) {
 			throw new ServletException("No servlet with name '" + this.servletName + "' defined in web.xml");
 		}
-
 		// If already included, include again, else forward.
 		if (useInclude(request, response)) {
 			rd.include(request, response);
@@ -144,7 +132,6 @@ public class ServletForwardingController extends AbstractController implements B
 						"] in ServletForwardingController '" + this.beanName + "'");
 			}
 		}
-
 		return null;
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2016 the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ package org.springframework.web.servlet.tags.form;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.BodyTag;
@@ -73,7 +72,7 @@ public class ErrorsTag extends AbstractHtmlElementBodyTag implements BodyTag {
 
 	/**
 	 * Set the HTML element must be used to render the error messages.
-	 * <p>Defaults to an HTML '{@code <span/>}' tag.
+	 * <p>Defaults to an HTML '{@code &lt;span/&gt;}' tag.
 	 */
 	public void setElement(String element) {
 		Assert.hasText(element, "'element' cannot be null or blank");
@@ -89,7 +88,7 @@ public class ErrorsTag extends AbstractHtmlElementBodyTag implements BodyTag {
 
 	/**
 	 * Set the delimiter to be used between error messages.
-	 * <p>Defaults to an HTML '{@code <br/>}' tag.
+	 * <p>Defaults to an HTML '{@code &lt;br/&gt;}' tag.
 	 */
 	public void setDelimiter(String delimiter) {
 		this.delimiter = delimiter;
@@ -106,7 +105,7 @@ public class ErrorsTag extends AbstractHtmlElementBodyTag implements BodyTag {
 	/**
 	 * Get the value for the HTML '{@code id}' attribute.
 	 * <p>Appends '{@code .errors}' to the value returned by {@link #getPropertyPath()}
-	 * or to the model attribute name if the {@code <form:errors/>} tag's
+	 * or to the model attribute name if the {@code &lt;form:errors/&gt;} tag's
 	 * '{@code path}' attribute has been omitted.
 	 * @return the value for the HTML '{@code id}' attribute
 	 * @see #getPropertyPath()
@@ -171,7 +170,7 @@ public class ErrorsTag extends AbstractHtmlElementBodyTag implements BodyTag {
 	 */
 	@Override
 	protected void exposeAttributes() throws JspException {
-		List<String> errorMessages = new ArrayList<>();
+		List<String> errorMessages = new ArrayList<String>();
 		errorMessages.addAll(Arrays.asList(getBindStatus().getErrorMessages()));
 		this.oldMessages = this.pageContext.getAttribute(MESSAGES_ATTRIBUTE, PageContext.PAGE_SCOPE);
 		this.pageContext.setAttribute(MESSAGES_ATTRIBUTE, errorMessages, PageContext.PAGE_SCOPE);

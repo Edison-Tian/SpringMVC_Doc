@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2016 the original author or authors.
+ * Copyright 2002-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,27 +32,28 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.support.PropertiesBeanDefinitionReader;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.Ordered;
-import org.springframework.lang.Nullable;
 import org.springframework.web.context.support.GenericWebApplicationContext;
 import org.springframework.web.servlet.View;
 
 /**
- * A {@link org.springframework.web.servlet.ViewResolver} implementation that uses
- * bean definitions in a {@link ResourceBundle}, specified by the bundle basename.
+ * {@link org.springframework.web.servlet.ViewResolver} implementation
+ * that uses bean definitions in a {@link ResourceBundle}, specified by
+ * the bundle basename.
  *
- * <p>The bundle is typically defined in a properties file, located in the classpath.
- * The default bundle basename is "views".
+ * <p>The bundle is typically defined in a properties file, located in
+ * the class path. The default bundle basename is "views".
  *
- * <p>This {@code ViewResolver} supports localized view definitions, using the
- * default support of {@link java.util.PropertyResourceBundle}. For example, the
- * basename "views" will be resolved as class path resources "views_de_AT.properties",
- * "views_de.properties", "views.properties" - for a given Locale "de_AT".
+ * <p>This {@code ViewResolver} supports localized view definitions,
+ * using the default support of {@link java.util.PropertyResourceBundle}.
+ * For example, the basename "views" will be resolved as class path resources
+ * "views_de_AT.properties", "views_de.properties", "views.properties" -
+ * for a given Locale "de_AT".
  *
- * <p>Note: This {@code ViewResolver} implements the {@link Ordered} interface
- * in order to allow for flexible participation in {@code ViewResolver} chaining.
- * For example, some special views could be defined via this {@code ViewResolver}
- * (giving it 0 as "order" value), while all remaining views could be resolved by
- * a {@link UrlBasedViewResolver}.
+ * <p>Note: this {@code ViewResolver} implements the {@link Ordered}
+ * interface to allow for flexible participation in {@code ViewResolver}
+ * chaining. For example, some special views could be defined via this
+ * {@code ViewResolver} (giving it 0 as "order" value), while all
+ * remaining views could be resolved by a {@link UrlBasedViewResolver}.
  *
  * @author Rod Johnson
  * @author Juergen Hoeller
@@ -73,24 +74,23 @@ public class ResourceBundleViewResolver extends AbstractCachingViewResolver
 
 	private ClassLoader bundleClassLoader = Thread.currentThread().getContextClassLoader();
 
-	@Nullable
 	private String defaultParentView;
 
-	@Nullable
 	private Locale[] localesToInitialize;
 
 	/* Locale -> BeanFactory */
-	private final Map<Locale, BeanFactory> localeCache = new HashMap<>();
+	private final Map<Locale, BeanFactory> localeCache =
+			new HashMap<Locale, BeanFactory>();
 
 	/* List of ResourceBundle -> BeanFactory */
-	private final Map<List<ResourceBundle>, ConfigurableApplicationContext> bundleCache = new HashMap<>();
+	private final Map<List<ResourceBundle>, ConfigurableApplicationContext> bundleCache =
+			new HashMap<List<ResourceBundle>, ConfigurableApplicationContext>();
 
 
 	public void setOrder(int order) {
 		this.order = order;
 	}
 
-	@Override
 	public int getOrder() {
 		return this.order;
 	}
@@ -109,7 +109,7 @@ public class ResourceBundleViewResolver extends AbstractCachingViewResolver
 	 * @see java.util.ResourceBundle#getBundle(String)
 	 */
 	public void setBasename(String basename) {
-		setBasenames(basename);
+		setBasenames(new String[] {basename});
 	}
 
 	/**
@@ -129,7 +129,7 @@ public class ResourceBundleViewResolver extends AbstractCachingViewResolver
 	 * @see #setBasename
 	 * @see java.util.ResourceBundle#getBundle(String)
 	 */
-	public void setBasenames(String... basenames) {
+	public void setBasenames(String[] basenames) {
 		this.basenames = basenames;
 	}
 
@@ -172,7 +172,7 @@ public class ResourceBundleViewResolver extends AbstractCachingViewResolver
 	 * <p>Allows for pre-initialization of common Locales, eagerly checking
 	 * the view configuration for those Locales.
 	 */
-	public void setLocalesToInitialize(Locale... localesToInitialize) {
+	public void setLocalesToInitialize(Locale[] localesToInitialize) {
 		this.localesToInitialize = localesToInitialize;
 	}
 
@@ -180,7 +180,6 @@ public class ResourceBundleViewResolver extends AbstractCachingViewResolver
 	 * Eagerly initialize Locales if necessary.
 	 * @see #setLocalesToInitialize
 	 */
-	@Override
 	public void afterPropertiesSet() throws BeansException {
 		if (this.localesToInitialize != null) {
 			for (Locale locale : this.localesToInitialize) {
@@ -197,7 +196,7 @@ public class ResourceBundleViewResolver extends AbstractCachingViewResolver
 			return factory.getBean(viewName, View.class);
 		}
 		catch (NoSuchBeanDefinitionException ex) {
-			// Allow for ViewResolver chaining...
+			// to allow for ViewResolver chaining
 			return null;
 		}
 	}
@@ -221,7 +220,7 @@ public class ResourceBundleViewResolver extends AbstractCachingViewResolver
 		}
 
 		// Build list of ResourceBundle references for Locale.
-		List<ResourceBundle> bundles = new LinkedList<>();
+		List<ResourceBundle> bundles = new LinkedList<ResourceBundle>();
 		for (String basename : this.basenames) {
 			ResourceBundle bundle = getBundle(basename, locale);
 			bundles.add(bundle);
@@ -276,7 +275,6 @@ public class ResourceBundleViewResolver extends AbstractCachingViewResolver
 	/**
 	 * Close the bundle View factories on context shutdown.
 	 */
-	@Override
 	public void destroy() throws BeansException {
 		for (ConfigurableApplicationContext factory : this.bundleCache.values()) {
 			factory.close();

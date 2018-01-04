@@ -18,9 +18,7 @@ package org.springframework.web.servlet.handler;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactoryUtils;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextException;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -69,13 +67,12 @@ public abstract class AbstractDetectingUrlHandlerMapping extends AbstractUrlHand
 	 * @see #determineUrlsForHandler(String)
 	 */
 	protected void detectHandlers() throws BeansException {
-		ApplicationContext applicationContext = obtainApplicationContext();
 		if (logger.isDebugEnabled()) {
-			logger.debug("Looking for URL mappings in application context: " + applicationContext);
+			logger.debug("Looking for URL mappings in application context: " + getApplicationContext());
 		}
 		String[] beanNames = (this.detectHandlersInAncestorContexts ?
-				BeanFactoryUtils.beanNamesForTypeIncludingAncestors(applicationContext, Object.class) :
-				applicationContext.getBeanNamesForType(Object.class));
+				BeanFactoryUtils.beanNamesForTypeIncludingAncestors(getApplicationContext(), Object.class) :
+				getApplicationContext().getBeanNamesForType(Object.class));
 
 		// Take any bean name that we can determine URLs for.
 		for (String beanName : beanNames) {
@@ -99,7 +96,6 @@ public abstract class AbstractDetectingUrlHandlerMapping extends AbstractUrlHand
 	 * @return the URLs determined for the bean,
 	 * or {@code null} or an empty array if none
 	 */
-	@Nullable
 	protected abstract String[] determineUrlsForHandler(String beanName);
 
 }

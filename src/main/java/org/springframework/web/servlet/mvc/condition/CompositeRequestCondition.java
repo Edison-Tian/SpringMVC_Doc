@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,7 +43,6 @@ public class CompositeRequestCondition extends AbstractRequestCondition<Composit
 
 	private final RequestConditionHolder[] requestConditions;
 
-
 	/**
 	 * Create an instance with 0 or more {@code RequestCondition} types. It is
 	 * important to create {@code CompositeRequestCondition} instances with the
@@ -54,17 +53,16 @@ public class CompositeRequestCondition extends AbstractRequestCondition<Composit
 		this.requestConditions = wrap(requestConditions);
 	}
 
-	private CompositeRequestCondition(RequestConditionHolder[] requestConditions) {
-		this.requestConditions = requestConditions;
-	}
-
-
 	private RequestConditionHolder[] wrap(RequestCondition<?>... rawConditions) {
 		RequestConditionHolder[] wrappedConditions = new RequestConditionHolder[rawConditions.length];
 		for (int i = 0; i < rawConditions.length; i++) {
 			wrappedConditions[i] = new RequestConditionHolder(rawConditions[i]);
 		}
 		return wrappedConditions;
+	}
+
+	private CompositeRequestCondition(RequestConditionHolder[] requestConditions) {
+		this.requestConditions = requestConditions;
 	}
 
 	/**
@@ -82,7 +80,7 @@ public class CompositeRequestCondition extends AbstractRequestCondition<Composit
 	}
 
 	private List<RequestCondition<?>> unwrap() {
-		List<RequestCondition<?>> result = new ArrayList<>();
+		List<RequestCondition<?>> result = new ArrayList<RequestCondition<?>>();
 		for (RequestConditionHolder holder : this.requestConditions) {
 			result.add(holder.getCondition());
 		}
@@ -108,7 +106,6 @@ public class CompositeRequestCondition extends AbstractRequestCondition<Composit
 	 * If both instances have conditions, combine the individual conditions
 	 * after ensuring they are of the same type and number.
 	 */
-	@Override
 	public CompositeRequestCondition combine(CompositeRequestCondition other) {
 		if (isEmpty() && other.isEmpty()) {
 			return this;
@@ -131,9 +128,8 @@ public class CompositeRequestCondition extends AbstractRequestCondition<Composit
 
 	private void assertNumberOfConditions(CompositeRequestCondition other) {
 		Assert.isTrue(getLength() == other.getLength(),
-				"Cannot combine CompositeRequestConditions with a different number of conditions. " +
-				ObjectUtils.nullSafeToString(this.requestConditions) + " and  " +
-				ObjectUtils.nullSafeToString(other.requestConditions));
+				"Cannot combine CompositeRequestConditions with a different number of conditions. "
+					+ this.requestConditions + " and  " + other.requestConditions);
 	}
 
 	/**
@@ -141,7 +137,6 @@ public class CompositeRequestCondition extends AbstractRequestCondition<Composit
 	 * resulting "matching" condition instances.
 	 * <p>An empty {@code CompositeRequestCondition} matches to all requests.
 	 */
-	@Override
 	public CompositeRequestCondition getMatchingCondition(HttpServletRequest request) {
 		if (isEmpty()) {
 			return this;
@@ -160,7 +155,6 @@ public class CompositeRequestCondition extends AbstractRequestCondition<Composit
 	 * If one instance is empty, the other "wins". If both instances have
 	 * conditions, compare them in the order in which they were provided.
 	 */
-	@Override
 	public int compareTo(CompositeRequestCondition other, HttpServletRequest request) {
 		if (isEmpty() && other.isEmpty()) {
 			return 0;

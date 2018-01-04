@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2015 the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,35 +16,34 @@
 
 package org.springframework.web.servlet.tags;
 
-import org.junit.Test;
-
-import static org.junit.Assert.*;
+import junit.framework.TestCase;
 
 /**
- * Unit tests for {@link Param}.
+ * Unit tests for Param
  *
  * @author Scott Andrews
  */
-public class ParamTests {
+public class ParamTests extends TestCase {
 
-	private final Param param = new Param();
+	private Param param;
 
-	@Test
-	public void name() {
+	@Override
+	protected void setUp() throws Exception {
+		param = new Param();
+	}
+
+	public void testName() {
 		param.setName("name");
 		assertEquals("name", param.getName());
 	}
 
-	@Test
-	public void value() {
+	public void testValue() {
 		param.setValue("value");
 		assertEquals("value", param.getValue());
 	}
 
-	@Test
-	public void nullDefaults() {
+	public void testNullDefaults() {
 		assertNull(param.getName());
 		assertNull(param.getValue());
 	}
-
 }

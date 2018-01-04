@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2015 the original author or authors.
+ * Copyright 2002-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,9 @@ package org.springframework.web.servlet.tags.form;
 import javax.servlet.jsp.tagext.BodyTag;
 import javax.servlet.jsp.tagext.Tag;
 
-import org.junit.Test;
 import org.springframework.tests.sample.beans.CustomEnum;
 import org.springframework.tests.sample.beans.GenericBean;
 import org.springframework.web.servlet.support.BindStatus;
-
-import static org.junit.Assert.*;
 
 /**
  * @author Juergen Hoeller
@@ -56,9 +53,7 @@ public class OptionTagEnumTests extends AbstractHtmlElementTagTests {
 		this.tag.setPageContext(getPageContext());
 	}
 
-	@Test
-	@SuppressWarnings("rawtypes")
-	public void withJavaEnum() throws Exception {
+	public void testWithJavaEnum() throws Exception {
 		GenericBean testBean = new GenericBean();
 		testBean.setCustomEnum(CustomEnum.VALUE_1);
 		getPageContext().getRequest().setAttribute("testBean", testBean);

@@ -19,7 +19,6 @@ package org.springframework.web.servlet.mvc.support;
 import java.util.Collection;
 import java.util.Map;
 
-import org.springframework.lang.Nullable;
 import org.springframework.ui.Model;
 import org.springframework.web.servlet.FlashMap;
 
@@ -37,7 +36,7 @@ import org.springframework.web.servlet.FlashMap;
  * automatically propagated to the "output" FlashMap of the current request.
  *
  * <p>Example usage in an {@code @Controller}:
- * <pre class="code">
+ * <pre>
  * &#064;RequestMapping(value = "/accounts", method = RequestMethod.POST)
  * public String handle(Account account, BindingResult result, RedirectAttributes redirectAttrs) {
  *   if (result.hasErrors()) {
@@ -60,16 +59,12 @@ import org.springframework.web.servlet.FlashMap;
  */
 public interface RedirectAttributes extends Model {
 
-	@Override
-	RedirectAttributes addAttribute(String attributeName, @Nullable Object attributeValue);
+	RedirectAttributes addAttribute(String attributeName, Object attributeValue);
 
-	@Override
 	RedirectAttributes addAttribute(Object attributeValue);
 
-	@Override
 	RedirectAttributes addAllAttributes(Collection<?> attributeValues);
 
-	@Override
 	RedirectAttributes mergeAttributes(Map<String, ?> attributes);
 
 	/**
@@ -77,7 +72,7 @@ public interface RedirectAttributes extends Model {
 	 * @param attributeName the attribute name; never {@code null}
 	 * @param attributeValue the attribute value; may be {@code null}
 	 */
-	RedirectAttributes addFlashAttribute(String attributeName, @Nullable Object attributeValue);
+	RedirectAttributes addFlashAttribute(String attributeName, Object attributeValue);
 
 	/**
 	 * Add the given flash storage using a

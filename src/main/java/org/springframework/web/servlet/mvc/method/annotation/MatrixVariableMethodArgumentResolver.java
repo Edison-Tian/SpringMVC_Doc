@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.core.MethodParameter;
-import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
@@ -34,13 +33,12 @@ import org.springframework.web.method.annotation.AbstractNamedValueMethodArgumen
 import org.springframework.web.servlet.HandlerMapping;
 
 /**
- * Resolves method arguments annotated with {@link MatrixVariable @MatrixVariable}.
+ * Resolves method arguments annotated with an {@link MatrixVariable @PathParam}.
  *
  * <p>If the method parameter is of type Map and no name is specified, then it will
  * by resolved by the {@link MatrixVariableMapMethodArgumentResolver} instead.
  *
  * @author Rossen Stoyanchev
- * @author Sam Brannen
  * @since 3.2
  */
 public class MatrixVariableMethodArgumentResolver extends AbstractNamedValueMethodArgumentResolver {
@@ -49,38 +47,36 @@ public class MatrixVariableMethodArgumentResolver extends AbstractNamedValueMeth
 		super(null);
 	}
 
-
-	@Override
 	public boolean supportsParameter(MethodParameter parameter) {
 		if (!parameter.hasParameterAnnotation(MatrixVariable.class)) {
 			return false;
 		}
-		if (Map.class.isAssignableFrom(parameter.nestedIfOptional().getNestedParameterType())) {
-			MatrixVariable matrixVariable = parameter.getParameterAnnotation(MatrixVariable.class);
-			return (matrixVariable != null && StringUtils.hasText(matrixVariable.name()));
+		if (Map.class.isAssignableFrom(parameter.getParameterType())) {
+			String paramName = parameter.getParameterAnnotation(MatrixVariable.class).value();
+			return StringUtils.hasText(paramName);
 		}
 		return true;
 	}
 
 	@Override
 	protected NamedValueInfo createNamedValueInfo(MethodParameter parameter) {
-		MatrixVariable ann = parameter.getParameterAnnotation(MatrixVariable.class);
-		Assert.state(ann != null, "No MatrixVariable annotation");
-		return new MatrixVariableNamedValueInfo(ann);
+		MatrixVariable annotation = parameter.getParameterAnnotation(MatrixVariable.class);
+		return new PathParamNamedValueInfo(annotation);
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	protected Object resolveName(String name, MethodParameter parameter, NativeWebRequest request) throws Exception {
-		Map<String, MultiValueMap<String, String>> pathParameters = (Map<String, MultiValueMap<String, String>>)
-				request.getAttribute(HandlerMapping.MATRIX_VARIABLES_ATTRIBUTE, RequestAttributes.SCOPE_REQUEST);
+
+		@SuppressWarnings("unchecked")
+		Map<String, MultiValueMap<String, String>> pathParameters =
+			(Map<String, MultiValueMap<String, String>>) request.getAttribute(
+					HandlerMapping.MATRIX_VARIABLES_ATTRIBUTE, RequestAttributes.SCOPE_REQUEST);
+
 		if (CollectionUtils.isEmpty(pathParameters)) {
 			return null;
 		}
 
-		MatrixVariable ann = parameter.getParameterAnnotation(MatrixVariable.class);
-		Assert.state(ann != null, "No MatrixVariable annotation");
-		String pathVar = ann.pathVar();
+		String pathVar = parameter.getParameterAnnotation(MatrixVariable.class).pathVar();
 		List<String> paramValues = null;
 
 		if (!pathVar.equals(ValueConstants.DEFAULT_NONE)) {
@@ -90,14 +86,14 @@ public class MatrixVariableMethodArgumentResolver extends AbstractNamedValueMeth
 		}
 		else {
 			boolean found = false;
-			paramValues = new ArrayList<>();
+			paramValues = new ArrayList<String>();
 			for (MultiValueMap<String, String> params : pathParameters.values()) {
 				if (params.containsKey(name)) {
 					if (found) {
-						String paramType = parameter.getNestedParameterType().getName();
+						String paramType = parameter.getParameterType().getName();
 						throw new ServletRequestBindingException(
 								"Found more than one match for URI path parameter '" + name +
-								"' for parameter type [" + paramType + "]. Use 'pathVar' attribute to disambiguate.");
+								"' for parameter type [" + paramType + "]. Use pathVar attribute to disambiguate.");
 					}
 					paramValues.addAll(params.get(name));
 					found = true;
@@ -117,17 +113,17 @@ public class MatrixVariableMethodArgumentResolver extends AbstractNamedValueMeth
 	}
 
 	@Override
-	protected void handleMissingValue(String name, MethodParameter parameter) throws ServletRequestBindingException {
-		throw new ServletRequestBindingException("Missing matrix variable '" + name +
-				"' for method parameter of type " + parameter.getNestedParameterType().getSimpleName());
+	protected void handleMissingValue(String name, MethodParameter param) throws ServletRequestBindingException {
+		String paramType = param.getParameterType().getName();
+		throw new ServletRequestBindingException(
+				"Missing matrix variable '" + name + "' for method parameter type [" + paramType + "]");
 	}
 
 
-	private static class MatrixVariableNamedValueInfo extends NamedValueInfo {
+	private static class PathParamNamedValueInfo extends NamedValueInfo {
 
-		private MatrixVariableNamedValueInfo(MatrixVariable annotation) {
-			super(annotation.name(), annotation.required(), annotation.defaultValue());
+		private PathParamNamedValueInfo(MatrixVariable annotation) {
+			super(annotation.value(), annotation.required(), annotation.defaultValue());
 		}
 	}
-
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2016 the original author or authors.
+ * Copyright 2002-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,16 +22,15 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Set;
+
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.Tag;
 
-import org.junit.Test;
-
-import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.tests.sample.beans.IndexedTestBean;
 import org.springframework.tests.sample.beans.NestedTestBean;
 import org.springframework.tests.sample.beans.TestBean;
+import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.DataBinder;
@@ -41,8 +40,6 @@ import org.springframework.web.servlet.support.BindStatus;
 import org.springframework.web.servlet.tags.form.FormTag;
 import org.springframework.web.servlet.tags.form.TagWriter;
 
-import static org.junit.Assert.*;
-
 /**
  * @author Juergen Hoeller
  * @author Alef Arendsen
@@ -50,8 +47,7 @@ import static org.junit.Assert.*;
  */
 public class BindTagTests extends AbstractTagTests {
 
-	@Test
-	public void bindTagWithoutErrors() throws JspException {
+	public void testBindTagWithoutErrors() throws JspException {
 		PageContext pc = createPageContext();
 		Errors errors = new ServletRequestDataBinder(new TestBean(), "tb").getBindingResult();
 		pc.getRequest().setAttribute(BindingResult.MODEL_KEY_PREFIX + "tb", errors);
@@ -72,8 +68,7 @@ public class BindTagTests extends AbstractTagTests {
 		assertTrue("Correct errorMessagesAsString", "".equals(status.getErrorMessagesAsString(",")));
 	}
 
-	@Test
-	public void bindTagWithGlobalErrors() throws JspException {
+	public void testBindTagWithGlobalErrors() throws JspException {
 		PageContext pc = createPageContext();
 		Errors errors = new ServletRequestDataBinder(new TestBean(), "tb").getBindingResult();
 		errors.reject("code1", "message1");
@@ -112,8 +107,7 @@ public class BindTagTests extends AbstractTagTests {
 		assertTrue("Correct errorMessagesAsString", "message1".equals(status.getErrorMessagesAsString(",")));
 	}
 
-	@Test
-	public void bindTagWithGlobalErrorsAndNoDefaultMessage() throws JspException {
+	public void testBindTagWithGlobalErrorsAndNoDefaultMessage() throws JspException {
 		PageContext pc = createPageContext();
 		Errors errors = new ServletRequestDataBinder(new TestBean(), "tb").getBindingResult();
 		errors.reject("code1");
@@ -146,8 +140,7 @@ public class BindTagTests extends AbstractTagTests {
 		assertTrue("Correct errorCode", "code1".equals(status.getErrorCode()));
 	}
 
-	@Test
-	public void bindTagWithGlobalErrorsAndDefaultMessageOnly() throws JspException {
+	public void testBindTagWithGlobalErrorsAndDefaultMessageOnly() throws JspException {
 		PageContext pc = createPageContext();
 		Errors errors = new ServletRequestDataBinder(new TestBean(), "tb").getBindingResult();
 		errors.reject(null, "message1");
@@ -182,8 +175,7 @@ public class BindTagTests extends AbstractTagTests {
 		assertTrue("Correct errorMessagesAsString", "message1".equals(status.getErrorMessagesAsString(",")));
 	}
 
-	@Test
-	public void bindStatusGetErrorMessagesAsString() throws JspException {
+	public void testBindStatusGetErrorMessagesAsString() throws JspException {
 		// one error (should not include delimiter)
 		PageContext pc = createPageContext();
 		Errors errors = new ServletRequestDataBinder(new TestBean(), "tb").getBindingResult();
@@ -223,8 +215,7 @@ public class BindTagTests extends AbstractTagTests {
 		assertEquals("Error messages String should be ''", status.getErrorMessagesAsString(","), "");
 	}
 
-	@Test
-	public void bindTagWithFieldErrors() throws JspException {
+	public void testBindTagWithFieldErrors() throws JspException {
 		PageContext pc = createPageContext();
 		TestBean tb = new TestBean();
 		tb.setName("name1");
@@ -237,7 +228,7 @@ public class BindTagTests extends AbstractTagTests {
 		BindTag tag = new BindTag();
 		tag.setPageContext(pc);
 		tag.setPath("tb.name");
-		tag.setHtmlEscape(true);
+		tag.setHtmlEscape("true");
 		assertTrue("Correct doStartTag return value", tag.doStartTag() == Tag.EVAL_BODY_INCLUDE);
 		BindStatus status = (BindStatus) pc.getAttribute(BindTag.STATUS_VARIABLE_NAME, PageContext.REQUEST_SCOPE);
 		assertTrue("Has status variable", status != null);
@@ -294,8 +285,7 @@ public class BindTagTests extends AbstractTagTests {
 		assertTrue("Correct errorMessage", "message2".equals(status.getErrorMessages()[2]));
 	}
 
-	@Test
-	public void bindTagWithFieldErrorsAndNoDefaultMessage() throws JspException {
+	public void testBindTagWithFieldErrorsAndNoDefaultMessage() throws JspException {
 		PageContext pc = createPageContext();
 		TestBean tb = new TestBean();
 		tb.setName("name1");
@@ -308,7 +298,7 @@ public class BindTagTests extends AbstractTagTests {
 		BindTag tag = new BindTag();
 		tag.setPageContext(pc);
 		tag.setPath("tb.name");
-		tag.setHtmlEscape(true);
+		tag.setHtmlEscape("true");
 		assertTrue("Correct doStartTag return value", tag.doStartTag() == Tag.EVAL_BODY_INCLUDE);
 		BindStatus status = (BindStatus) pc.getAttribute(BindTag.STATUS_VARIABLE_NAME, PageContext.REQUEST_SCOPE);
 		assertTrue("Has status variable", status != null);
@@ -351,8 +341,7 @@ public class BindTagTests extends AbstractTagTests {
 		assertTrue("Correct errorCode", "code2".equals(status.getErrorCodes()[2]));
 	}
 
-	@Test
-	public void bindTagWithFieldErrorsAndDefaultMessageOnly() throws JspException {
+	public void testBindTagWithFieldErrorsAndDefaultMessageOnly() throws JspException {
 		PageContext pc = createPageContext();
 		TestBean tb = new TestBean();
 		tb.setName("name1");
@@ -365,7 +354,7 @@ public class BindTagTests extends AbstractTagTests {
 		BindTag tag = new BindTag();
 		tag.setPageContext(pc);
 		tag.setPath("tb.name");
-		tag.setHtmlEscape(true);
+		tag.setHtmlEscape("true");
 		assertTrue("Correct doStartTag return value", tag.doStartTag() == Tag.EVAL_BODY_INCLUDE);
 		BindStatus status = (BindStatus) pc.getAttribute(BindTag.STATUS_VARIABLE_NAME, PageContext.REQUEST_SCOPE);
 		assertTrue("Has status variable", status != null);
@@ -411,8 +400,7 @@ public class BindTagTests extends AbstractTagTests {
 		assertTrue("Correct errorMessage", "message2".equals(status.getErrorMessages()[2]));
 	}
 
-	@Test
-	public void bindTagWithNestedFieldErrors() throws JspException {
+	public void testBindTagWithNestedFieldErrors() throws JspException {
 		PageContext pc = createPageContext();
 		TestBean tb = new TestBean();
 		tb.setName("name1");
@@ -424,7 +412,8 @@ public class BindTagTests extends AbstractTagTests {
 		pc.getRequest().setAttribute(BindingResult.MODEL_KEY_PREFIX + "tb", errors);
 		BindTag tag = new BindTag();
 		tag.setPageContext(pc);
-		tag.setPath("tb.spouse.name");
+		pc.setAttribute("myattr", "tb.spouse.name");
+		tag.setPath("${myattr}");
 		assertTrue("Correct doStartTag return value", tag.doStartTag() == Tag.EVAL_BODY_INCLUDE);
 		BindStatus status = (BindStatus) pc.getAttribute(BindTag.STATUS_VARIABLE_NAME, PageContext.REQUEST_SCOPE);
 		assertTrue("Has status variable", status != null);
@@ -439,8 +428,7 @@ public class BindTagTests extends AbstractTagTests {
 		assertTrue("Correct errorMessagesAsString", "message1".equals(status.getErrorMessagesAsString(" - ")));
 	}
 
-	@Test
-	public void propertyExposing() throws JspException {
+	public void testPropertyExposing() throws JspException {
 		PageContext pc = createPageContext();
 		TestBean tb = new TestBean();
 		tb.setName("name1");
@@ -464,8 +452,7 @@ public class BindTagTests extends AbstractTagTests {
 		assertEquals("name", tag.getProperty());
 	}
 
-	@Test
-	public void bindTagWithIndexedProperties() throws JspException {
+	public void testBindTagWithIndexedProperties() throws JspException {
 		PageContext pc = createPageContext();
 		IndexedTestBean tb = new IndexedTestBean();
 		Errors errors = new ServletRequestDataBinder(tb, "tb").getBindingResult();
@@ -491,8 +478,7 @@ public class BindTagTests extends AbstractTagTests {
 		assertTrue("Correct errorMessage", "message2".equals(status.getErrorMessages()[1]));
 	}
 
-	@Test
-	public void bindTagWithMappedProperties() throws JspException {
+	public void testBindTagWithMappedProperties() throws JspException {
 		PageContext pc = createPageContext();
 		IndexedTestBean tb = new IndexedTestBean();
 		Errors errors = new ServletRequestDataBinder(tb, "tb").getBindingResult();
@@ -518,8 +504,7 @@ public class BindTagTests extends AbstractTagTests {
 		assertTrue("Correct errorMessage", "message2".equals(status.getErrorMessages()[1]));
 	}
 
-	@Test
-	public void bindTagWithIndexedPropertiesAndCustomEditor() throws JspException {
+	public void testBindTagWithIndexedPropertiesAndCustomEditor() throws JspException {
 		PageContext pc = createPageContext();
 		IndexedTestBean tb = new IndexedTestBean();
 		DataBinder binder = new ServletRequestDataBinder(tb, "tb");
@@ -546,13 +531,12 @@ public class BindTagTests extends AbstractTagTests {
 		assertTrue("Correct value", "something".equals(status.getValue()));
 	}
 
-	@Test
-	public void bindTagWithToStringAndHtmlEscaping() throws JspException {
+	public void testBindTagWithToStringAndHtmlEscaping() throws JspException {
 		PageContext pc = createPageContext();
 		BindTag tag = new BindTag();
 		tag.setPageContext(pc);
 		tag.setPath("tb.doctor");
-		tag.setHtmlEscape(true);
+		tag.setHtmlEscape("true");
 		TestBean tb = new TestBean("somebody", 99);
 		NestedTestBean ntb = new NestedTestBean("juergen&eva");
 		tb.setDoctor(ntb);
@@ -564,13 +548,12 @@ public class BindTagTests extends AbstractTagTests {
 		assertTrue(status.getDisplayValue().indexOf("juergen&amp;eva") != -1);
 	}
 
-	@Test
-	public void bindTagWithSetValueAndHtmlEscaping() throws JspException {
+	public void testBindTagWithSetValueAndHtmlEscaping() throws JspException {
 		PageContext pc = createPageContext();
 		BindTag tag = new BindTag();
 		tag.setPageContext(pc);
 		tag.setPath("tb.someSet");
-		tag.setHtmlEscape(true);
+		tag.setHtmlEscape("true");
 		pc.getRequest().setAttribute("tb", new TestBean("juergen&eva", 99));
 		tag.doStartTag();
 		BindStatus status = (BindStatus) pc.getAttribute(BindTag.STATUS_VARIABLE_NAME, PageContext.REQUEST_SCOPE);
@@ -578,8 +561,7 @@ public class BindTagTests extends AbstractTagTests {
 		assertTrue(status.getValue() instanceof Set);
 	}
 
-	@Test
-	public void bindTagWithFieldButWithoutErrorsInstance() throws JspException {
+	public void testBindTagWithFieldButWithoutErrorsInstance() throws JspException {
 		PageContext pc = createPageContext();
 		BindTag tag = new BindTag();
 		tag.setPageContext(pc);
@@ -591,13 +573,12 @@ public class BindTagTests extends AbstractTagTests {
 		assertEquals("juergen&eva", status.getValue());
 	}
 
-	@Test
-	public void bindTagWithFieldButWithoutErrorsInstanceAndHtmlEscaping() throws JspException {
+	public void testBindTagWithFieldButWithoutErrorsInstanceAndHtmlEscaping() throws JspException {
 		PageContext pc = createPageContext();
 		BindTag tag = new BindTag();
 		tag.setPageContext(pc);
 		tag.setPath("tb.name");
-		tag.setHtmlEscape(true);
+		tag.setHtmlEscape("true");
 		pc.getRequest().setAttribute("tb", new TestBean("juergen&eva", 99));
 		tag.doStartTag();
 		BindStatus status = (BindStatus) pc.getAttribute(BindTag.STATUS_VARIABLE_NAME, PageContext.REQUEST_SCOPE);
@@ -605,8 +586,7 @@ public class BindTagTests extends AbstractTagTests {
 		assertEquals("juergen&amp;eva", status.getValue());
 	}
 
-	@Test
-	public void bindTagWithBeanButWithoutErrorsInstance() throws JspException {
+	public void testBindTagWithBeanButWithoutErrorsInstance() throws JspException {
 		PageContext pc = createPageContext();
 		BindTag tag = new BindTag();
 		tag.setPageContext(pc);
@@ -618,8 +598,7 @@ public class BindTagTests extends AbstractTagTests {
 		assertNull(status.getValue());
 	}
 
-	@Test
-	public void bindTagWithoutBean() throws JspException {
+	public void testBindTagWithoutBean() throws JspException {
 		PageContext pc = createPageContext();
 		BindTag tag = new BindTag();
 		tag.setPageContext(pc);
@@ -634,8 +613,7 @@ public class BindTagTests extends AbstractTagTests {
 	}
 
 
-	@Test
-	public void bindErrorsTagWithoutErrors() throws JspException {
+	public void testBindErrorsTagWithoutErrors() throws JspException {
 		PageContext pc = createPageContext();
 		Errors errors = new ServletRequestDataBinder(new TestBean(), "tb").getBindingResult();
 		pc.getRequest().setAttribute(BindingResult.MODEL_KEY_PREFIX + "tb", errors);
@@ -646,8 +624,7 @@ public class BindTagTests extends AbstractTagTests {
 		assertTrue("Doesn't have errors variable", pc.getAttribute(BindErrorsTag.ERRORS_VARIABLE_NAME) == null);
 	}
 
-	@Test
-	public void bindErrorsTagWithErrors() throws JspException {
+	public void testBindErrorsTagWithErrors() throws JspException {
 		PageContext pc = createPageContext();
 		Errors errors = new ServletRequestDataBinder(new TestBean(), "tb").getBindingResult();
 		errors.reject("test", null, "test");
@@ -659,8 +636,7 @@ public class BindTagTests extends AbstractTagTests {
 		assertTrue("Has errors variable", pc.getAttribute(BindErrorsTag.ERRORS_VARIABLE_NAME, PageContext.REQUEST_SCOPE) == errors);
 	}
 
-	@Test
-	public void bindErrorsTagWithoutBean() throws JspException {
+	public void testBindErrorsTagWithoutBean() throws JspException {
 		PageContext pc = createPageContext();
 		BindErrorsTag tag = new BindErrorsTag();
 		tag.setPageContext(pc);
@@ -669,8 +645,7 @@ public class BindTagTests extends AbstractTagTests {
 	}
 
 
-	@Test
-	public void nestedPathDoEndTag() throws JspException {
+	public void testNestedPathDoEndTag() throws JspException {
 		PageContext pc = createPageContext();
 		NestedPathTag tag = new NestedPathTag();
 		tag.setPath("foo");
@@ -681,8 +656,7 @@ public class BindTagTests extends AbstractTagTests {
 		assertNull(pc.getAttribute(NestedPathTag.NESTED_PATH_VARIABLE_NAME, PageContext.REQUEST_SCOPE));
 	}
 
-	@Test
-	public void nestedPathDoEndTagWithNesting() throws JspException {
+	public void testNestedPathDoEndTagWithNesting() throws JspException {
 		PageContext pc = createPageContext();
 		NestedPathTag tag = new NestedPathTag();
 		tag.setPath("foo");
@@ -701,8 +675,7 @@ public class BindTagTests extends AbstractTagTests {
 		assertNull(pc.getAttribute(NestedPathTag.NESTED_PATH_VARIABLE_NAME, PageContext.REQUEST_SCOPE));
 	}
 
-	@Test
-	public void nestedPathDoStartTagInternal() throws JspException {
+	public void testNestedPathDoStartTagInternal() throws JspException {
 		PageContext pc = createPageContext();
 		NestedPathTag tag = new NestedPathTag();
 		tag.setPath("foo");
@@ -713,8 +686,7 @@ public class BindTagTests extends AbstractTagTests {
 		assertEquals("foo.", pc.getAttribute(NestedPathTag.NESTED_PATH_VARIABLE_NAME, PageContext.REQUEST_SCOPE));
 	}
 
-	@Test
-	public void nestedPathDoStartTagInternalWithNesting() throws JspException {
+	public void testNestedPathDoStartTagInternalWithNesting() throws JspException {
 		PageContext pc = createPageContext();
 		NestedPathTag tag = new NestedPathTag();
 		tag.setPath("foo");
@@ -746,8 +718,7 @@ public class BindTagTests extends AbstractTagTests {
 		assertEquals("foo.bar.boo2.", pc.getAttribute(NestedPathTag.NESTED_PATH_VARIABLE_NAME, PageContext.REQUEST_SCOPE));
 	}
 
-	@Test
-	public void nestedPathWithBindTag() throws JspException {
+	public void testNestedPathWithBindTag() throws JspException {
 		PageContext pc = createPageContext();
 		Errors errors = new ServletRequestDataBinder(new TestBean(), "tb").getBindingResult();
 		pc.getRequest().setAttribute(BindingResult.MODEL_KEY_PREFIX + "tb", errors);
@@ -788,8 +759,7 @@ public class BindTagTests extends AbstractTagTests {
 		nestedPathTag.doEndTag();
 	}
 
-	@Test
-	public void nestedPathWithBindTagWithIgnoreNestedPath() throws JspException {
+	public void testNestedPathWithBindTagWithIgnoreNestedPath() throws JspException {
 		PageContext pc = createPageContext();
 		Errors errors = new ServletRequestDataBinder(new TestBean(), "tb2").getBindingResult();
 		pc.getRequest().setAttribute(BindingResult.MODEL_KEY_PREFIX + "tb2", errors);
@@ -810,8 +780,7 @@ public class BindTagTests extends AbstractTagTests {
 		assertEquals("tb2.name", status.getPath());
 	}
 
-	@Test
-	public void transformTagCorrectBehavior() throws JspException {
+	public void testTransformTagCorrectBehavior() throws JspException {
 		// first set up the pagecontext and the bean
 		PageContext pc = createPageContext();
 		TestBean tb = new TestBean();
@@ -830,8 +799,9 @@ public class BindTagTests extends AbstractTagTests {
 		// transform stuff
 		TransformTag transform = new TransformTag();
 		transform.setPageContext(pc);
+		pc.setAttribute("date", tb.getDate());
 		transform.setParent(bind);
-		transform.setValue(tb.getDate());
+		transform.setValue("${date}");
 		transform.setVar("theDate");
 		transform.doStartTag();
 
@@ -846,17 +816,17 @@ public class BindTagTests extends AbstractTagTests {
 
 		transform = new TransformTag();
 		transform.setPageContext(pc);
-		transform.setValue("name");
+		pc.setAttribute("string", "name");
+		transform.setValue("${string}");
 		transform.setParent(bind);
 		transform.setVar("theString");
 		transform.doStartTag();
 
 		assertNotNull(pc.getAttribute("theString"));
-		assertEquals("name", pc.getAttribute("theString"));
+		assertEquals(pc.getAttribute("theString"), "name");
 	}
 
-	@Test
-	public void transformTagWithHtmlEscape() throws JspException {
+	public void testTransformTagWithHtmlEscape() throws JspException {
 		// first set up the PageContext and the bean
 		PageContext pc = createPageContext();
 		TestBean tb = new TestBean();
@@ -874,18 +844,18 @@ public class BindTagTests extends AbstractTagTests {
 
 		TransformTag transform = new TransformTag();
 		transform.setPageContext(pc);
-		transform.setValue("na<me");
+		pc.setAttribute("string", "na<me");
+		transform.setValue("${string}");
 		transform.setParent(bind);
 		transform.setVar("theString");
-		transform.setHtmlEscape(true);
+		transform.setHtmlEscape("true");
 		transform.doStartTag();
 
 		assertNotNull(pc.getAttribute("theString"));
-		assertEquals("na&lt;me", pc.getAttribute("theString"));
+		assertEquals(pc.getAttribute("theString"), "na&lt;me");
 	}
 
-	@Test
-	public void transformTagOutsideBindTag() throws JspException {
+	public void testTransformTagOutsideBindTag() throws JspException {
 		// first set up the pagecontext and the bean
 		PageContext pc = createPageContext();
 		TestBean tb = new TestBean();
@@ -925,8 +895,7 @@ public class BindTagTests extends AbstractTagTests {
 		}
 	}
 
-	@Test
-	public void transformTagNonExistingValue() throws JspException {
+	public void testTransformTagNonExistingValue() throws JspException {
 		// first set up the pagecontext and the bean
 		PageContext pc = createPageContext();
 		TestBean tb = new TestBean();
@@ -944,7 +913,7 @@ public class BindTagTests extends AbstractTagTests {
 
 		TransformTag transform = new TransformTag();
 		transform.setPageContext(pc);
-		transform.setValue(null);
+		transform.setValue("${string2}");
 		transform.setParent(bind);
 		transform.setVar("theString2");
 		transform.doStartTag();
@@ -952,8 +921,7 @@ public class BindTagTests extends AbstractTagTests {
 		assertNull(pc.getAttribute("theString2"));
 	}
 
-	@Test
-	public void transformTagWithSettingOfScope() throws JspException {
+	public void testTransformTagWithSettingOfScope() throws JspException {
 		// first set up the pagecontext and the bean
 		PageContext pc = createPageContext();
 		TestBean tb = new TestBean();
@@ -972,8 +940,9 @@ public class BindTagTests extends AbstractTagTests {
 		// transform stuff
 		TransformTag transform = new TransformTag();
 		transform.setPageContext(pc);
+		pc.setAttribute("date", tb.getDate());
 		transform.setParent(bind);
-		transform.setValue(tb.getDate());
+		transform.setValue("${date}");
 		transform.setVar("theDate");
 		transform.setScope("page");
 		transform.doStartTag();
@@ -981,7 +950,7 @@ public class BindTagTests extends AbstractTagTests {
 		transform.release();
 
 		assertNotNull(pc.getAttribute("theDate"));
-		assertEquals(df.format(tb.getDate()), pc.getAttribute("theDate"));
+		assertEquals(pc.getAttribute("theDate"), df.format(tb.getDate()));
 
 		// try another time, this time using Strings
 		bind = new BindTag();
@@ -991,24 +960,25 @@ public class BindTagTests extends AbstractTagTests {
 
 		transform = new TransformTag();
 		transform.setPageContext(pc);
-		transform.setValue("name");
+		pc.setAttribute("string", "name");
+		pc.setAttribute("scopy", "page");
+		transform.setValue("${string}");
 		transform.setParent(bind);
 		transform.setVar("theString");
-		transform.setScope("page");
+		transform.setScope("${scopy}");
 		transform.doStartTag();
 
 		transform.release();
 
 		assertNotNull(pc.getAttribute("theString"));
-		assertEquals("name", pc.getAttribute("theString"));
+		assertEquals(pc.getAttribute("theString"), "name");
 	}
 
 	/**
 	 * SPR-4022
 	 */
 	@SuppressWarnings("serial")
-	@Test
-	public void nestingInFormTag() throws JspException {
+	public void testNestingInFormTag() throws JspException {
 		PageContext pc = createPageContext();
 		TestBean tb = new TestBean();
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
@@ -1039,7 +1009,7 @@ public class BindTagTests extends AbstractTagTests {
 		formTag.setCssClass(cssClass);
 		formTag.setCssStyle(cssStyle);
 		formTag.setAction(action);
-		formTag.setModelAttribute(commandName);
+		formTag.setCommandName(commandName);
 		formTag.setEnctype(enctype);
 		formTag.setMethod(method);
 		formTag.setOnsubmit(onsubmit);

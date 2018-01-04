@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2015 the original author or authors.
+ * Copyright 2002-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,11 +20,7 @@ import java.io.Writer;
 
 import javax.servlet.jsp.tagext.Tag;
 
-import org.junit.Test;
-
 import org.springframework.tests.sample.beans.TestBean;
-
-import static org.junit.Assert.*;
 
 /**
  * @author Rossen Stoyanchev
@@ -43,8 +39,7 @@ public class ButtonTagTests extends AbstractFormTagTests {
 		this.tag.setValue("My Button");
 	}
 
-	@Test
-	public void buttonTag() throws Exception {
+	public void testButtonTag() throws Exception {
 		assertEquals(Tag.EVAL_BODY_INCLUDE, this.tag.doStartTag());
 		assertEquals(Tag.EVAL_PAGE, this.tag.doEndTag());
 
@@ -59,9 +54,8 @@ public class ButtonTagTests extends AbstractFormTagTests {
 		assertAttributeNotPresent(output, "disabled");
 	}
 
-	@Test
-	public void disabled() throws Exception {
-		this.tag.setDisabled(true);
+	public void testDisabled() throws Exception {
+		this.tag.setDisabled("true");
 
 		this.tag.doStartTag();
 		this.tag.doEndTag();

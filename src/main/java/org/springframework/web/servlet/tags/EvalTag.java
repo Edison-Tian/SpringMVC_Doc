@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,10 @@
 package org.springframework.web.servlet.tags;
 
 import java.io.IOException;
+
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.PageContext;
+import javax.servlet.jsp.el.VariableResolver;
 
 import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.context.expression.EnvironmentAccessor;
@@ -33,8 +35,9 @@ import org.springframework.expression.TypedValue;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.expression.spel.support.StandardTypeConverter;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
+import org.springframework.web.util.ExpressionEvaluationUtils;
+import org.springframework.web.util.HtmlUtils;
 import org.springframework.web.util.JavaScriptUtils;
 import org.springframework.web.util.TagUtils;
 
@@ -59,10 +62,8 @@ public class EvalTag extends HtmlEscapingAwareTag {
 
 	private final ExpressionParser expressionParser = new SpelExpressionParser();
 
-	@Nullable
 	private Expression expression;
 
-	@Nullable
 	private String var;
 
 	private int scope = PageContext.PAGE_SCOPE;
@@ -97,8 +98,9 @@ public class EvalTag extends HtmlEscapingAwareTag {
 	 * Set JavaScript escaping for this tag, as boolean value.
 	 * Default is "false".
 	 */
-	public void setJavaScriptEscape(boolean javaScriptEscape) throws JspException {
-		this.javaScriptEscape = javaScriptEscape;
+	public void setJavaScriptEscape(String javaScriptEscape) throws JspException {
+		this.javaScriptEscape =
+				ExpressionEvaluationUtils.evaluateBoolean("javaScriptEscape", javaScriptEscape, this.pageContext);
 	}
 
 
@@ -116,15 +118,14 @@ public class EvalTag extends HtmlEscapingAwareTag {
 			this.pageContext.setAttribute(EVALUATION_CONTEXT_PAGE_ATTRIBUTE, evaluationContext);
 		}
 		if (this.var != null) {
-			Object result = (this.expression != null ? this.expression.getValue(evaluationContext) : null);
+			Object result = this.expression.getValue(evaluationContext);
 			this.pageContext.setAttribute(this.var, result, this.scope);
 		}
 		else {
 			try {
-				String result = (this.expression != null ?
-						this.expression.getValue(evaluationContext, String.class) : null);
+				String result = this.expression.getValue(evaluationContext, String.class);
 				result = ObjectUtils.getDisplayString(result);
-				result = htmlEscape(result);
+				result = (isHtmlEscape() ? HtmlUtils.htmlEscape(result) : result);
 				result = (this.javaScriptEscape ? JavaScriptUtils.javaScriptEscape(result) : result);
 				this.pageContext.getOut().print(result);
 			}
@@ -148,38 +149,32 @@ public class EvalTag extends HtmlEscapingAwareTag {
 		return context;
 	}
 
-	@Nullable
 	private ConversionService getConversionService(PageContext pageContext) {
 		return (ConversionService) pageContext.getRequest().getAttribute(ConversionService.class.getName());
 	}
 
 
-	@SuppressWarnings("deprecation")
 	private static class JspPropertyAccessor implements PropertyAccessor {
 
 		private final PageContext pageContext;
 
-		@Nullable
-		private final javax.servlet.jsp.el.VariableResolver variableResolver;
+		private final VariableResolver variableResolver;
 
 		public JspPropertyAccessor(PageContext pageContext) {
 			this.pageContext = pageContext;
 			this.variableResolver = pageContext.getVariableResolver();
 		}
 
-		@Override
 		public Class<?>[] getSpecificTargetClasses() {
 			return null;
 		}
 
-		@Override
-		public boolean canRead(EvaluationContext context, @Nullable Object target, String name) throws AccessException {
+		public boolean canRead(EvaluationContext context, Object target, String name) throws AccessException {
 			return (target == null &&
 					(resolveImplicitVariable(name) != null || this.pageContext.findAttribute(name) != null));
 		}
 
-		@Override
-		public TypedValue read(EvaluationContext context, @Nullable Object target, String name) throws AccessException {
+		public TypedValue read(EvaluationContext context, Object target, String name) throws AccessException {
 			Object implicitVar = resolveImplicitVariable(name);
 			if (implicitVar != null) {
 				return new TypedValue(implicitVar);
@@ -187,13 +182,11 @@ public class EvalTag extends HtmlEscapingAwareTag {
 			return new TypedValue(this.pageContext.findAttribute(name));
 		}
 
-		@Override
-		public boolean canWrite(EvaluationContext context, @Nullable Object target, String name) {
+		public boolean canWrite(EvaluationContext context, Object target, String name) {
 			return false;
 		}
 
-		@Override
-		public void write(EvaluationContext context, @Nullable Object target, String name, @Nullable Object newValue) {
+		public void write(EvaluationContext context, Object target, String name, Object newValue) {
 			throw new UnsupportedOperationException();
 		}
 

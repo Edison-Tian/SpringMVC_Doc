@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2016 the original author or authors.
+ * Copyright 2002-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package org.springframework.web.servlet.tags.form;
 
-import java.io.UnsupportedEncodingException;
 import java.util.Map;
+
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
@@ -32,7 +32,6 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.support.RequestDataValueProcessor;
 import org.springframework.web.util.HtmlUtils;
-import org.springframework.web.util.UriUtils;
 
 /**
  * Databinding-aware JSP tag for rendering an HTML '{@code form}' whose
@@ -43,11 +42,17 @@ import org.springframework.web.util.UriUtils;
  * populating the data for their view. The name of this form object can be
  * configured using the {@link #setModelAttribute "modelAttribute"} property.
  *
+ * <p>The default value for the {@link #setModelAttribute "modelAttribute"}
+ * property is '{@code command}' which corresponds to the default name
+ * when using the
+ * {@link org.springframework.web.servlet.mvc.SimpleFormController SimpleFormController}.
+ *
  * @author Rob Harrop
  * @author Juergen Hoeller
  * @author Scott Andrews
  * @author Rossen Stoyanchev
  * @since 2.0
+ * @see org.springframework.web.servlet.mvc.SimpleFormController
  */
 @SuppressWarnings("serial")
 public class FormTag extends AbstractHtmlElementTag {
@@ -144,6 +149,23 @@ public class FormTag extends AbstractHtmlElementTag {
 	}
 
 	/**
+	 * Set the name of the form attribute in the model.
+	 * <p>May be a runtime expression.
+	 * @see #setModelAttribute
+	 */
+	public void setCommandName(String commandName) {
+		this.modelAttribute = commandName;
+	}
+
+	/**
+	 * Get the name of the form attribute in the model.
+	 * @see #getModelAttribute
+	 */
+	protected String getCommandName() {
+		return this.modelAttribute;
+	}
+
+	/**
 	 * Set the value of the '{@code name}' attribute.
 	 * <p>May be a runtime expression.
 	 * <p>Name is not a valid attribute for form on XHTML 1.0. However,
@@ -177,18 +199,15 @@ public class FormTag extends AbstractHtmlElementTag {
 	}
 
 	/**
-	 * Set the value of the '{@code action}' attribute through a value
-	 * that is to be appended to the current servlet path.
+	 * Set the value of the '{@code action}' attribute.
 	 * <p>May be a runtime expression.
-	 * @since 3.2.3
 	 */
-	public void setServletRelativeAction(String servletRelativeAction) {
-		this.servletRelativeAction = (servletRelativeAction != null ? servletRelativeAction : "");
+	public void setServletRelativeAction(String servletRelativeaction) {
+		this.servletRelativeAction = (servletRelativeaction != null ? servletRelativeaction : "");
 	}
 
 	/**
-	 * Get the servlet-relative value of the '{@code action}' attribute.
-	 * @since 3.2.3
+	 * Get the value of the '{@code action}' attribute.
 	 */
 	protected String getServletRelativeAction() {
 		return this.servletRelativeAction;
@@ -308,9 +327,8 @@ public class FormTag extends AbstractHtmlElementTag {
 
 	/**
 	 * Get the name of the request param for non-browser supported HTTP methods.
-	 * @since 4.2.3
 	 */
-	protected String getMethodParam() {
+	protected String getMethodParameter() {
 		return this.methodParam;
 	}
 
@@ -320,7 +338,6 @@ public class FormTag extends AbstractHtmlElementTag {
 	protected boolean isMethodBrowserSupported(String method) {
 		return ("get".equalsIgnoreCase(method) || "post".equalsIgnoreCase(method));
 	}
-
 
 	/**
 	 * Writes the opening part of the block	'{@code form}' tag and exposes
@@ -335,7 +352,8 @@ public class FormTag extends AbstractHtmlElementTag {
 		tagWriter.startTag(FORM_TAG);
 		writeDefaultAttributes(tagWriter);
 		tagWriter.writeAttribute(ACTION_ATTRIBUTE, resolveAction());
-		writeOptionalAttribute(tagWriter, METHOD_ATTRIBUTE, getHttpMethod());
+		writeOptionalAttribute(tagWriter, METHOD_ATTRIBUTE,
+				isMethodBrowserSupported(getMethod()) ? getMethod() : DEFAULT_METHOD);
 		writeOptionalAttribute(tagWriter, TARGET_ATTRIBUTE, getTarget());
 		writeOptionalAttribute(tagWriter, ENCTYPE_ATTRIBUTE, getEnctype());
 		writeOptionalAttribute(tagWriter, ACCEPT_CHARSET_ATTRIBUTE, getAcceptCharset());
@@ -347,7 +365,7 @@ public class FormTag extends AbstractHtmlElementTag {
 
 		if (!isMethodBrowserSupported(getMethod())) {
 			assertHttpMethod(getMethod());
-			String inputName = getMethodParam();
+			String inputName = getMethodParameter();
 			String inputType = "hidden";
 			tagWriter.startTag(INPUT_TAG);
 			writeOptionalAttribute(tagWriter, TYPE_ATTRIBUTE, inputType);
@@ -359,6 +377,7 @@ public class FormTag extends AbstractHtmlElementTag {
 		// Expose the form object name for nested tags...
 		String modelAttribute = resolveModelAttribute();
 		this.pageContext.setAttribute(MODEL_ATTRIBUTE_VARIABLE_NAME, modelAttribute, PageContext.REQUEST_SCOPE);
+		this.pageContext.setAttribute(COMMAND_NAME_VARIABLE_NAME, modelAttribute, PageContext.REQUEST_SCOPE);
 
 		// Save previous nestedPath value, build and expose current nestedPath value.
 		// Use request scope to expose nestedPath to included pages too.
@@ -368,10 +387,6 @@ public class FormTag extends AbstractHtmlElementTag {
 				modelAttribute + PropertyAccessor.NESTED_PROPERTY_SEPARATOR, PageContext.REQUEST_SCOPE);
 
 		return EVAL_BODY_INCLUDE;
-	}
-
-	private String getHttpMethod() {
-		return (isMethodBrowserSupported(getMethod()) ? getMethod() : DEFAULT_METHOD);
 	}
 
 	private void assertHttpMethod(String method) {
@@ -411,6 +426,7 @@ public class FormTag extends AbstractHtmlElementTag {
 	 * with the context and servlet paths, and the result is used. Otherwise, the
 	 * {@link org.springframework.web.servlet.support.RequestContext#getRequestUri()
 	 * originating URI} is used.
+	 *
 	 * @return the value that is to be used for the '{@code action}' attribute
 	 */
 	protected String resolveAction() throws JspException {
@@ -422,8 +438,7 @@ public class FormTag extends AbstractHtmlElementTag {
 		}
 		else if (StringUtils.hasText(servletRelativeAction)) {
 			String pathToServlet = getRequestContext().getPathToServlet();
-			if (servletRelativeAction.startsWith("/") &&
-					!servletRelativeAction.startsWith(getRequestContext().getContextPath())) {
+			if (servletRelativeAction.startsWith("/") && !servletRelativeAction.startsWith(getRequestContext().getContextPath())) {
 				servletRelativeAction = pathToServlet + servletRelativeAction;
 			}
 			servletRelativeAction = getDisplayString(evaluate(ACTION_ATTRIBUTE, servletRelativeAction));
@@ -431,13 +446,6 @@ public class FormTag extends AbstractHtmlElementTag {
 		}
 		else {
 			String requestUri = getRequestContext().getRequestUri();
-			String encoding = this.pageContext.getResponse().getCharacterEncoding();
-			try {
-				requestUri = UriUtils.encodePath(requestUri, encoding);
-			}
-			catch (UnsupportedEncodingException ex) {
-				// shouldn't happen - if it does, proceed with requestUri as-is
-			}
 			ServletResponse response = this.pageContext.getResponse();
 			if (response instanceof HttpServletResponse) {
 				requestUri = ((HttpServletResponse) response).encodeURL(requestUri);
@@ -463,8 +471,8 @@ public class FormTag extends AbstractHtmlElementTag {
 	private String processAction(String action) {
 		RequestDataValueProcessor processor = getRequestContext().getRequestDataValueProcessor();
 		ServletRequest request = this.pageContext.getRequest();
-		if (processor != null && request instanceof HttpServletRequest) {
-			action = processor.processAction((HttpServletRequest) request, action, getHttpMethod());
+		if ((processor != null) && (request instanceof HttpServletRequest)) {
+			action = processor.processAction((HttpServletRequest) request, action);
 		}
 		return action;
 	}
@@ -489,13 +497,11 @@ public class FormTag extends AbstractHtmlElementTag {
 	 */
 	private void writeHiddenFields(Map<String, String> hiddenFields) throws JspException {
 		if (hiddenFields != null) {
-			this.tagWriter.appendValue("<div>\n");
 			for (String name : hiddenFields.keySet()) {
 				this.tagWriter.appendValue("<input type=\"hidden\" ");
 				this.tagWriter.appendValue("name=\"" + name + "\" value=\"" + hiddenFields.get(name) + "\" ");
 				this.tagWriter.appendValue("/>\n");
 			}
-			this.tagWriter.appendValue("</div>");
 		}
 	}
 
@@ -506,6 +512,7 @@ public class FormTag extends AbstractHtmlElementTag {
 	public void doFinally() {
 		super.doFinally();
 		this.pageContext.removeAttribute(MODEL_ATTRIBUTE_VARIABLE_NAME, PageContext.REQUEST_SCOPE);
+		this.pageContext.removeAttribute(COMMAND_NAME_VARIABLE_NAME, PageContext.REQUEST_SCOPE);
 		if (this.previousNestedPath != null) {
 			// Expose previous nestedPath value.
 			this.pageContext.setAttribute(NESTED_PATH_VARIABLE_NAME, this.previousNestedPath, PageContext.REQUEST_SCOPE);

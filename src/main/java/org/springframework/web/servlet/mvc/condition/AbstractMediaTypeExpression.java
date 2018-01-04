@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,12 @@
 
 package org.springframework.web.servlet.mvc.condition;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.http.MediaType;
-import org.springframework.lang.Nullable;
+import org.springframework.web.HttpMediaTypeException;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 /**
@@ -31,7 +32,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
  * @author Rossen Stoyanchev
  * @since 3.1
  */
-abstract class AbstractMediaTypeExpression implements MediaTypeExpression, Comparable<AbstractMediaTypeExpression> {
+abstract class AbstractMediaTypeExpression implements Comparable<AbstractMediaTypeExpression>, MediaTypeExpression {
 
 	protected final Log logger = LogFactory.getLog(getClass());
 
@@ -39,64 +40,70 @@ abstract class AbstractMediaTypeExpression implements MediaTypeExpression, Compa
 
 	private final boolean isNegated;
 
-
 	AbstractMediaTypeExpression(String expression) {
 		if (expression.startsWith("!")) {
-			this.isNegated = true;
+			isNegated = true;
 			expression = expression.substring(1);
 		}
 		else {
-			this.isNegated = false;
+			isNegated = false;
 		}
 		this.mediaType = MediaType.parseMediaType(expression);
 	}
 
 	AbstractMediaTypeExpression(MediaType mediaType, boolean negated) {
 		this.mediaType = mediaType;
-		this.isNegated = negated;
+		isNegated = negated;
 	}
 
-
-	@Override
 	public MediaType getMediaType() {
-		return this.mediaType;
+		return mediaType;
 	}
 
-	@Override
 	public boolean isNegated() {
-		return this.isNegated;
+		return isNegated;
 	}
 
+	public final boolean match(HttpServletRequest request) {
+		try {
+			boolean match = matchMediaType(request);
+			return !isNegated ? match : !match;
+		}
+		catch (HttpMediaTypeException ex) {
+			return false;
+		}
+	}
 
-	@Override
+	protected abstract boolean matchMediaType(HttpServletRequest request) throws HttpMediaTypeException;
+
 	public int compareTo(AbstractMediaTypeExpression other) {
 		return MediaType.SPECIFICITY_COMPARATOR.compare(this.getMediaType(), other.getMediaType());
 	}
 
 	@Override
-	public boolean equals(@Nullable Object obj) {
+	public boolean equals(Object obj) {
 		if (this == obj) {
 			return true;
 		}
-		if (obj != null && getClass() == obj.getClass()) {
+		if (obj != null && getClass().equals(obj.getClass())) {
 			AbstractMediaTypeExpression other = (AbstractMediaTypeExpression) obj;
-			return (this.mediaType.equals(other.mediaType) && this.isNegated == other.isNegated);
+			return (this.mediaType.equals(other.mediaType)) && (this.isNegated == other.isNegated);
 		}
 		return false;
 	}
 
 	@Override
 	public int hashCode() {
-		return this.mediaType.hashCode();
+		return mediaType.hashCode();
 	}
 
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		if (this.isNegated) {
+		if (isNegated) {
 			builder.append('!');
 		}
-		builder.append(this.mediaType.toString());
+		builder.append(mediaType.toString());
 		return builder.toString();
 	}
 

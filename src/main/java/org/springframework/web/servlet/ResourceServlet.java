@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,13 @@
 package org.springframework.web.servlet;
 
 import java.io.IOException;
+
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.springframework.lang.Nullable;
 import org.springframework.util.AntPathMatcher;
-import org.springframework.util.Assert;
 import org.springframework.util.PathMatcher;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.support.ServletContextResource;
@@ -104,18 +103,14 @@ public class ResourceServlet extends HttpServletBean {
 	public static final String RESOURCE_PARAM_NAME = "resource";
 
 
-	@Nullable
 	private String defaultUrl;
 
-	@Nullable
 	private String allowedResources;
 
-	@Nullable
 	private String contentType;
 
 	private boolean applyLastModified = false;
 
-	@Nullable
 	private PathMatcher pathMatcher;
 
 	private long startupTime;
@@ -206,7 +201,16 @@ public class ResourceServlet extends HttpServletBean {
 			try {
 				doInclude(request, response, resourceUrl);
 			}
-			catch (ServletException | IOException ex) {
+			catch (ServletException ex) {
+				if (logger.isWarnEnabled()) {
+					logger.warn("Failed to include content of resource [" + resourceUrl + "]", ex);
+				}
+				// Try including default URL if appropriate.
+				if (!includeDefaultUrl(request, response)) {
+					throw ex;
+				}
+			}
+			catch (IOException ex) {
 				if (logger.isWarnEnabled()) {
 					logger.warn("Failed to include content of resource [" + resourceUrl + "]", ex);
 				}
@@ -231,7 +235,6 @@ public class ResourceServlet extends HttpServletBean {
 	 * @return the URL of the target resource, or {@code null} if none found
 	 * @see #RESOURCE_PARAM_NAME
 	 */
-	@Nullable
 	protected String determineResourceUrl(HttpServletRequest request) {
 		return request.getParameter(RESOURCE_PARAM_NAME);
 	}
@@ -270,19 +273,16 @@ public class ResourceServlet extends HttpServletBean {
 		}
 		String[] resourceUrls =
 			StringUtils.tokenizeToStringArray(resourceUrl, RESOURCE_URL_DELIMITERS);
-		for (String url : resourceUrls) {
+		for (int i = 0; i < resourceUrls.length; i++) {
 			// check whether URL matches allowed resources
-			if (this.allowedResources != null) {
-				Assert.state(this.pathMatcher != null, "No PathMatcher available");
-				if (!this.pathMatcher.match(this.allowedResources, url)) {
-					throw new ServletException("Resource [" + url +
-							"] does not match allowed pattern [" + this.allowedResources + "]");
-				}
+			if (this.allowedResources != null && !this.pathMatcher.match(this.allowedResources, resourceUrls[i])) {
+				throw new ServletException("Resource [" + resourceUrls[i] +
+						"] does not match allowed pattern [" + this.allowedResources + "]");
 			}
 			if (logger.isDebugEnabled()) {
-				logger.debug("Including resource [" + url + "]");
+				logger.debug("Including resource [" + resourceUrls[i] + "]");
 			}
-			RequestDispatcher rd = request.getRequestDispatcher(url);
+			RequestDispatcher rd = request.getRequestDispatcher(resourceUrls[i]);
 			rd.include(request, response);
 		}
 	}
@@ -295,7 +295,7 @@ public class ResourceServlet extends HttpServletBean {
 	 * to allow for message resolution etc that influences JSP contents,
 	 * assuming that those background resources might have changed on restart.
 	 * <p>Returns the startup time of this servlet if the file that corresponds
-	 * to the target resource URL couldn't be resolved (for example, because
+	 * to the target resource URL coudln't be resolved (for example, because
 	 * the WAR is not expanded).
 	 * @see #determineResourceUrl
 	 * @see #getFileTimestamp
@@ -310,8 +310,8 @@ public class ResourceServlet extends HttpServletBean {
 			if (resourceUrl != null) {
 				String[] resourceUrls = StringUtils.tokenizeToStringArray(resourceUrl, RESOURCE_URL_DELIMITERS);
 				long latestTimestamp = -1;
-				for (String url : resourceUrls) {
-					long timestamp = getFileTimestamp(url);
+				for (int i = 0; i < resourceUrls.length; i++) {
+					long timestamp = getFileTimestamp(resourceUrls[i]);
 					if (timestamp > latestTimestamp) {
 						latestTimestamp = timestamp;
 					}

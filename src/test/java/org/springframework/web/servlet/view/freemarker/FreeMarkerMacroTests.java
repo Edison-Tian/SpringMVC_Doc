@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,27 +16,27 @@
 
 package org.springframework.web.servlet.view.freemarker;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
-import javax.servlet.ServletContext;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
-import freemarker.template.Configuration;
-import freemarker.template.SimpleHash;
-import freemarker.template.Template;
-import freemarker.template.TemplateException;
 import org.junit.Before;
 import org.junit.Test;
-
+import org.springframework.tests.sample.beans.TestBean;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.mock.web.test.MockHttpServletRequest;
 import org.springframework.mock.web.test.MockHttpServletResponse;
 import org.springframework.mock.web.test.MockServletContext;
-import org.springframework.tests.sample.beans.TestBean;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.support.StaticWebApplicationContext;
@@ -47,7 +47,10 @@ import org.springframework.web.servlet.support.RequestContext;
 import org.springframework.web.servlet.theme.FixedThemeResolver;
 import org.springframework.web.servlet.view.DummyMacroRequestContext;
 
-import static org.junit.Assert.*;
+import freemarker.template.Configuration;
+import freemarker.template.SimpleHash;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
 
 /**
  * @author Darren Davison
@@ -66,17 +69,14 @@ public class FreeMarkerMacroTests {
 
 	private FreeMarkerConfigurer fc;
 
-
 	@Before
 	public void setUp() throws Exception {
-		ServletContext sc = new MockServletContext();
 		wac = new StaticWebApplicationContext();
-		wac.setServletContext(sc);
+		wac.setServletContext(new MockServletContext());
 
 		// final Template expectedTemplate = new Template();
 		fc = new FreeMarkerConfigurer();
-		fc.setTemplateLoaderPaths("classpath:/", "file://" + System.getProperty("java.io.tmpdir"));
-		fc.setServletContext(sc);
+		fc.setTemplateLoaderPaths(new String[] { "classpath:/", "file://" + System.getProperty("java.io.tmpdir") });
 		fc.afterPropertiesSet();
 
 		wac.getDefaultListableBeanFactory().registerSingleton("freeMarkerConfigurer", fc);
@@ -89,12 +89,10 @@ public class FreeMarkerMacroTests {
 		response = new MockHttpServletResponse();
 	}
 
-
 	@Test
 	public void testExposeSpringMacroHelpers() throws Exception {
 		FreeMarkerView fv = new FreeMarkerView() {
 			@Override
-			@SuppressWarnings("rawtypes")
 			protected void processTemplate(Template template, SimpleHash fmModel, HttpServletResponse response)
 					throws TemplateException {
 				Map model = fmModel.toMap();
@@ -109,7 +107,7 @@ public class FreeMarkerMacroTests {
 		fv.setApplicationContext(wac);
 		fv.setExposeSpringMacroHelpers(true);
 
-		Map<String, Object> model = new HashMap<>();
+		Map<String, Object> model = new HashMap<String, Object>();
 		model.put("tb", new TestBean("juergen", 99));
 		fv.render(model, request, response);
 	}
@@ -128,13 +126,12 @@ public class FreeMarkerMacroTests {
 		fv.setApplicationContext(wac);
 		fv.setExposeSpringMacroHelpers(true);
 
-		Map<String, Object> model = new HashMap<>();
+		Map<String, Object> model = new HashMap<String, Object>();
 		model.put(FreeMarkerView.SPRING_MACRO_REQUEST_CONTEXT_ATTRIBUTE, helperTool);
 
 		try {
 			fv.render(model, request, response);
-		}
-		catch (Exception ex) {
+		} catch (Exception ex) {
 			assertTrue(ex instanceof ServletException);
 			assertTrue(ex.getMessage().contains(FreeMarkerView.SPRING_MACRO_REQUEST_CONTEXT_ATTRIBUTE));
 		}
@@ -213,16 +210,15 @@ public class FreeMarkerMacroTests {
 
 	@Test
 	public void testForm3() throws Exception {
-		assertEquals("<textarea id=\"name\" name=\"name\" >\nDarren</textarea>", getMacroOutput("FORM3"));
+		assertEquals("<textarea id=\"name\" name=\"name\" >Darren</textarea>", getMacroOutput("FORM3"));
 	}
 
 	@Test
 	public void testForm4() throws Exception {
-		assertEquals("<textarea id=\"name\" name=\"name\" rows=10 cols=30>\nDarren</textarea>", getMacroOutput("FORM4"));
+		assertEquals("<textarea id=\"name\" name=\"name\" rows=10 cols=30>Darren</textarea>", getMacroOutput("FORM4"));
 	}
 
 	// TODO verify remaining output (fix whitespace)
-
 	@Test
 	public void testForm9() throws Exception {
 		assertEquals("<input type=\"password\" id=\"name\" name=\"name\" value=\"\"     >", getMacroOutput("FORM9"));
@@ -276,8 +272,8 @@ public class FreeMarkerMacroTests {
 		assertTrue("Wrong output: " + output, output.contains("<input type=\"checkbox\" id=\"spouses0.jedi\" name=\"spouses[0].jedi\" checked=\"checked\" />"));
 	}
 
-
 	private String getMacroOutput(String name) throws Exception {
+
 		String macro = fetchMacro(name);
 		assertNotNull(macro);
 
@@ -285,11 +281,11 @@ public class FreeMarkerMacroTests {
 		FileCopyUtils.copy("<#import \"spring.ftl\" as spring />\n" + macro, new FileWriter(resource.getPath()));
 
 		DummyMacroRequestContext rc = new DummyMacroRequestContext(request);
-		Map<String, String> msgMap = new HashMap<>();
+		Map<String, String> msgMap = new HashMap<String, String>();
 		msgMap.put("hello", "Howdy");
 		msgMap.put("world", "Mundo");
 		rc.setMessageMap(msgMap);
-		Map<String, String> themeMsgMap = new HashMap<>();
+		Map<String, String> themeMsgMap = new HashMap<String, String>();
 		themeMsgMap.put("hello", "Howdy!");
 		themeMsgMap.put("world", "Mundo!");
 		rc.setThemeMessageMap(themeMsgMap);
@@ -300,17 +296,16 @@ public class FreeMarkerMacroTests {
 		fred.setJedi(true);
 		darren.setSpouse(fred);
 		darren.setJedi(true);
-		darren.setStringArray(new String[] {"John", "Fred"});
 		request.setAttribute("command", darren);
 
-		Map<String, String> names = new HashMap<>();
+		Map<String, String> names = new HashMap<String, String>();
 		names.put("Darren", "Darren Davison");
 		names.put("John", "John Doe");
 		names.put("Fred", "Fred Bloggs");
 		names.put("Rob&Harrop", "Rob Harrop");
 
 		Configuration config = fc.getConfiguration();
-		Map<String, Object> model = new HashMap<>();
+		Map<String, Object> model = new HashMap<String, Object>();
 		model.put("command", darren);
 		model.put("springMacroRequestContext", rc);
 		model.put("msgArgs", new Object[] { "World" });
@@ -328,7 +323,6 @@ public class FreeMarkerMacroTests {
 
 		// tokenize output and ignore whitespace
 		String output = response.getContentAsString();
-		output = output.replace("\r\n", "\n");
 		return output.trim();
 	}
 

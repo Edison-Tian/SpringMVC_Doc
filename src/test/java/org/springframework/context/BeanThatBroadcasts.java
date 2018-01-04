@@ -16,6 +16,9 @@
 
 package org.springframework.context;
 
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+
 /**
  * @author Juergen Hoeller
  */

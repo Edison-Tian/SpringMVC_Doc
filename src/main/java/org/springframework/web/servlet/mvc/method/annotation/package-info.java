@@ -4,7 +4,4 @@
  * {@link org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping}
  * and {@link org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter}.
  */
-@NonNullApi
 package org.springframework.web.servlet.mvc.method.annotation;
-
-import org.springframework.lang.NonNullApi;

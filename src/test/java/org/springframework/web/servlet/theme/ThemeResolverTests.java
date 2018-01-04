@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2015 the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,21 +16,19 @@
 
 package org.springframework.web.servlet.theme;
 
-import org.junit.Test;
+import junit.framework.TestCase;
 
 import org.springframework.mock.web.test.MockHttpServletRequest;
 import org.springframework.mock.web.test.MockHttpServletResponse;
 import org.springframework.mock.web.test.MockServletContext;
 import org.springframework.web.servlet.ThemeResolver;
 
-import static org.junit.Assert.*;
-
 /**
  * @author Jean-Pierre Pawlak
  * @author Juergen Hoeller
  * @since 19.06.2003
  */
-public class ThemeResolverTests {
+public class ThemeResolverTests extends TestCase {
 
 	private static final String TEST_THEME_NAME = "test.theme";
 	private static final String DEFAULT_TEST_THEME_NAME = "default.theme";
@@ -61,23 +59,19 @@ public class ThemeResolverTests {
 		}
 	}
 
-	@Test
-	public void fixedThemeResolver() {
+	public void testFixedThemeResolver() {
 		internalTest(new FixedThemeResolver(), false, AbstractThemeResolver.ORIGINAL_DEFAULT_THEME_NAME);
 	}
 
-	@Test
-	public void cookieThemeResolver() {
+	public void testCookieThemeResolver() {
 		internalTest(new CookieThemeResolver(), true, AbstractThemeResolver.ORIGINAL_DEFAULT_THEME_NAME);
 	}
 
-	@Test
-	public void sessionThemeResolver() {
+	public void testSessionThemeResolver() {
 		internalTest(new SessionThemeResolver(), true,AbstractThemeResolver.ORIGINAL_DEFAULT_THEME_NAME);
 	}
 
-	@Test
-	public void sessionThemeResolverWithDefault() {
+	public void testSessionThemeResolverWithDefault() {
 		SessionThemeResolver tr = new SessionThemeResolver();
 		tr.setDefaultThemeName(DEFAULT_TEST_THEME_NAME);
 		internalTest(tr, true, DEFAULT_TEST_THEME_NAME);

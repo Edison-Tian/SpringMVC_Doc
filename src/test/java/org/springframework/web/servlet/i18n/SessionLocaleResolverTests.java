@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2013 the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,21 +17,19 @@
 package org.springframework.web.servlet.i18n;
 
 import java.util.Locale;
+
 import javax.servlet.http.HttpSession;
 
-import org.junit.Test;
+import junit.framework.TestCase;
 
 import org.springframework.mock.web.test.MockHttpServletRequest;
 import org.springframework.mock.web.test.MockHttpServletResponse;
 
-import static org.junit.Assert.*;
-
 /**
  * @author Juergen Hoeller
  */
-public class SessionLocaleResolverTests {
+public class SessionLocaleResolverTests extends TestCase {
 
-	@Test
 	public void testResolveLocale() {
 		MockHttpServletRequest request = new MockHttpServletRequest();
 		request.getSession().setAttribute(SessionLocaleResolver.LOCALE_SESSION_ATTRIBUTE_NAME, Locale.GERMAN);
@@ -40,7 +38,6 @@ public class SessionLocaleResolverTests {
 		assertEquals(Locale.GERMAN, resolver.resolveLocale(request));
 	}
 
-	@Test
 	public void testSetAndResolveLocale() {
 		MockHttpServletRequest request = new MockHttpServletRequest();
 		MockHttpServletResponse response = new MockHttpServletResponse();
@@ -57,7 +54,6 @@ public class SessionLocaleResolverTests {
 		assertEquals(Locale.GERMAN, resolver.resolveLocale(request));
 	}
 
-	@Test
 	public void testResolveLocaleWithoutSession() throws Exception {
 		MockHttpServletRequest request = new MockHttpServletRequest();
 		request.addPreferredLocale(Locale.TAIWAN);
@@ -67,7 +63,6 @@ public class SessionLocaleResolverTests {
 		assertEquals(request.getLocale(), resolver.resolveLocale(request));
 	}
 
-	@Test
 	public void testResolveLocaleWithoutSessionAndDefaultLocale() throws Exception {
 		MockHttpServletRequest request = new MockHttpServletRequest();
 		request.addPreferredLocale(Locale.TAIWAN);
@@ -78,7 +73,6 @@ public class SessionLocaleResolverTests {
 		assertEquals(Locale.GERMAN, resolver.resolveLocale(request));
 	}
 
-	@Test
 	public void testSetLocaleToNullLocale() throws Exception {
 		MockHttpServletRequest request = new MockHttpServletRequest();
 		request.addPreferredLocale(Locale.TAIWAN);

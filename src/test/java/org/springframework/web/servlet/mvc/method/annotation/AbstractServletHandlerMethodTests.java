@@ -16,21 +16,19 @@
 
 package org.springframework.web.servlet.mvc.method.annotation;
 
+import static org.junit.Assert.assertNotNull;
+
 import javax.servlet.ServletException;
 
 import org.junit.After;
-
 import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.lang.Nullable;
 import org.springframework.mock.web.test.MockServletConfig;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.GenericWebApplicationContext;
 import org.springframework.web.servlet.DispatcherServlet;
 import org.springframework.web.servlet.mvc.annotation.ResponseStatusExceptionResolver;
 import org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver;
-
-import static org.junit.Assert.*;
 
 /**
  * Base class for tests using on the DispatcherServlet and HandlerMethod infrastructure classes:
@@ -42,7 +40,7 @@ import static org.junit.Assert.*;
  *
  * @author Rossen Stoyanchev
  */
-public abstract class AbstractServletHandlerMethodTests {
+public class AbstractServletHandlerMethodTests {
 
 	private DispatcherServlet servlet;
 
@@ -77,7 +75,7 @@ public abstract class AbstractServletHandlerMethodTests {
 
 		servlet = new DispatcherServlet() {
 			@Override
-			protected WebApplicationContext createWebApplicationContext(@Nullable WebApplicationContext parent) {
+			protected WebApplicationContext createWebApplicationContext(WebApplicationContext parent) {
 				for (Class<?> clazz : controllerClasses) {
 					wac.registerBeanDefinition(clazz.getSimpleName(), new RootBeanDefinition(clazz));
 				}

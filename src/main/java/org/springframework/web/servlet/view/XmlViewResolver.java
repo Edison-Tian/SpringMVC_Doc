@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,29 +25,25 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.xml.ResourceEntityResolver;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.Ordered;
 import org.springframework.core.io.Resource;
-import org.springframework.lang.Nullable;
 import org.springframework.web.context.support.GenericWebApplicationContext;
 import org.springframework.web.servlet.View;
 
 /**
- * A {@link org.springframework.web.servlet.ViewResolver} implementation that uses
- * bean definitions in a dedicated XML file for view definitions, specified by
- * resource location. The file will typically be located in the WEB-INF directory;
- * the default is "/WEB-INF/views.xml".
+ * Implementation of ViewResolver that uses bean definitions in an
+ * XML file, specified by resource location. The file will typically
+ * be located in the WEB-INF directory; default is "/WEB-INF/views.xml".
  *
- * <p>This {@code ViewResolver} does not support internationalization at the level
- * of its definition resources. Consider {@link ResourceBundleViewResolver} if you
- * need to apply different view resources per locale.
+ * <p>This ViewResolver does not support internationalization.
+ * Consider ResourceBundleViewResolver if you need to apply
+ * different view resources per locale.
  *
- * <p>Note: This {@code ViewResolver} implements the {@link Ordered} interface
- * in order to allow for flexible participation in {@code ViewResolver} chaining.
- * For example, some special views could be defined via this {@code ViewResolver}
- * (giving it 0 as "order" value), while all remaining views could be resolved by
- * a {@link UrlBasedViewResolver}.
+ * <p>Note: This ViewResolver implements the Ordered interface to allow for
+ * flexible participation in ViewResolver chaining. For example, some special
+ * views could be defined via this ViewResolver (giving it 0 as "order" value),
+ * while all remaining views could be resolved by a UrlBasedViewResolver.
  *
  * @author Juergen Hoeller
  * @since 18.06.2003
@@ -64,10 +60,8 @@ public class XmlViewResolver extends AbstractCachingViewResolver
 
 	private int order = Integer.MAX_VALUE;  // default: same as non-Ordered
 
-	@Nullable
 	private Resource location;
 
-	@Nullable
 	private ConfigurableApplicationContext cachedFactory;
 
 
@@ -75,9 +69,8 @@ public class XmlViewResolver extends AbstractCachingViewResolver
 		this.order = order;
 	}
 
-	@Override
 	public int getOrder() {
-		return this.order;
+		return order;
 	}
 
 	/**
@@ -93,7 +86,6 @@ public class XmlViewResolver extends AbstractCachingViewResolver
 	 * Pre-initialize the factory from the XML file.
 	 * Only effective if caching is enabled.
 	 */
-	@Override
 	public void afterPropertiesSet() throws BeansException {
 		if (isCache()) {
 			initFactory();
@@ -117,7 +109,7 @@ public class XmlViewResolver extends AbstractCachingViewResolver
 			return factory.getBean(viewName, View.class);
 		}
 		catch (NoSuchBeanDefinitionException ex) {
-			// Allow for ViewResolver chaining...
+			// to allow for ViewResolver chaining
 			return null;
 		}
 	}
@@ -132,22 +124,20 @@ public class XmlViewResolver extends AbstractCachingViewResolver
 			return this.cachedFactory;
 		}
 
-		ApplicationContext applicationContext = obtainApplicationContext();
-
 		Resource actualLocation = this.location;
 		if (actualLocation == null) {
-			actualLocation = applicationContext.getResource(DEFAULT_LOCATION);
+			actualLocation = getApplicationContext().getResource(DEFAULT_LOCATION);
 		}
 
 		// Create child ApplicationContext for views.
 		GenericWebApplicationContext factory = new GenericWebApplicationContext();
-		factory.setParent(applicationContext);
+		factory.setParent(getApplicationContext());
 		factory.setServletContext(getServletContext());
 
 		// Load XML resource with context-aware entity resolver.
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(factory);
-		reader.setEnvironment(applicationContext.getEnvironment());
-		reader.setEntityResolver(new ResourceEntityResolver(applicationContext));
+		reader.setEnvironment(getApplicationContext().getEnvironment());
+		reader.setEntityResolver(new ResourceEntityResolver(getApplicationContext()));
 		reader.loadBeanDefinitions(actualLocation);
 
 		factory.refresh();
@@ -162,7 +152,6 @@ public class XmlViewResolver extends AbstractCachingViewResolver
 	/**
 	 * Close the view bean factory on context shutdown.
 	 */
-	@Override
 	public void destroy() throws BeansException {
 		if (this.cachedFactory != null) {
 			this.cachedFactory.close();

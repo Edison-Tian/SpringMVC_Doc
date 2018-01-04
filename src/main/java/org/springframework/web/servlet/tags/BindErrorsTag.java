@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2013 the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@ import javax.servlet.ServletException;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.PageContext;
 
-import org.springframework.lang.Nullable;
 import org.springframework.validation.Errors;
+import org.springframework.web.util.ExpressionEvaluationUtils;
 
 /**
  * JSP tag that evaluates content if there are binding errors
@@ -39,9 +39,8 @@ public class BindErrorsTag extends HtmlEscapingAwareTag {
 	public static final String ERRORS_VARIABLE_NAME = "errors";
 
 
-	private String name = "";
+	private String name;
 
-	@Nullable
 	private Errors errors;
 
 
@@ -62,7 +61,9 @@ public class BindErrorsTag extends HtmlEscapingAwareTag {
 
 	@Override
 	protected final int doStartTagInternal() throws ServletException, JspException {
-		this.errors = getRequestContext().getErrors(this.name, isHtmlEscape());
+		String resolvedName = ExpressionEvaluationUtils.evaluateString("name", this.name, pageContext);
+		this.errors = getRequestContext().getErrors(resolvedName, isHtmlEscape());
+
 		if (this.errors != null && this.errors.hasErrors()) {
 			this.pageContext.setAttribute(ERRORS_VARIABLE_NAME, this.errors, PageContext.REQUEST_SCOPE);
 			return EVAL_BODY_INCLUDE;
@@ -82,7 +83,6 @@ public class BindErrorsTag extends HtmlEscapingAwareTag {
 	 * Retrieve the Errors instance that this tag is currently bound to.
 	 * <p>Intended for cooperating nesting tags.
 	 */
-	@Nullable
 	public final Errors getErrors() {
 		return this.errors;
 	}

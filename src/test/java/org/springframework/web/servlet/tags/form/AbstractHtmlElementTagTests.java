@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2016 the original author or authors.
+ * Copyright 2002-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,12 @@ package org.springframework.web.servlet.tags.form;
 
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
+
+import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
-
-import org.junit.Before;
 
 import org.springframework.mock.web.test.MockHttpServletRequest;
 import org.springframework.mock.web.test.MockPageContext;
@@ -38,8 +38,7 @@ import org.springframework.web.servlet.support.RequestDataValueProcessorWrapper;
 import org.springframework.web.servlet.tags.AbstractTagTests;
 import org.springframework.web.servlet.tags.RequestContextAwareTag;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.BDDMockito.*;
 
 /**
  * @author Rob Harrop
@@ -54,8 +53,8 @@ public abstract class AbstractHtmlElementTagTests extends AbstractTagTests {
 	private MockPageContext pageContext;
 
 
-	@Before
-	public final void setUp() throws Exception {
+	@Override
+	protected final void setUp() throws Exception {
 		// set up a writer for the tag content to be written to
 		this.writer = new StringWriter();
 
@@ -68,7 +67,7 @@ public abstract class AbstractHtmlElementTagTests extends AbstractTagTests {
 	protected MockPageContext createAndPopulatePageContext() throws JspException {
 		MockPageContext pageContext = createPageContext();
 		MockHttpServletRequest request = (MockHttpServletRequest) pageContext.getRequest();
-		StaticWebApplicationContext wac = (StaticWebApplicationContext) RequestContextUtils.findWebApplicationContext(request);
+		StaticWebApplicationContext wac = (StaticWebApplicationContext) RequestContextUtils.getWebApplicationContext(request);
 		wac.registerSingleton("requestDataValueProcessor", RequestDataValueProcessorWrapper.class);
 		extendRequest(request);
 		extendPageContext(pageContext);
@@ -102,19 +101,18 @@ public abstract class AbstractHtmlElementTagTests extends AbstractTagTests {
 		return (RequestContext) getPageContext().getAttribute(RequestContextAwareTag.REQUEST_CONTEXT_PAGE_ATTRIBUTE);
 	}
 
-	@SuppressWarnings("deprecation")
 	protected RequestDataValueProcessor getMockRequestDataValueProcessor() {
 		RequestDataValueProcessor mockProcessor = mock(RequestDataValueProcessor.class);
-		HttpServletRequest request = (HttpServletRequest) getPageContext().getRequest();
-		StaticWebApplicationContext wac = (StaticWebApplicationContext) RequestContextUtils.findWebApplicationContext(request);
+		ServletRequest request = getPageContext().getRequest();
+		StaticWebApplicationContext wac = (StaticWebApplicationContext) RequestContextUtils.getWebApplicationContext(request);
 		wac.getBean(RequestDataValueProcessorWrapper.class).setRequestDataValueProcessor(mockProcessor);
 		return mockProcessor;
 	}
 
 	protected void exposeBindingResult(Errors errors) {
 		// wrap errors in a Model
-		Map<String, Object> model = Collections.singletonMap(
-				BindingResult.MODEL_KEY_PREFIX + COMMAND_NAME, errors);
+		Map model = new HashMap();
+		model.put(BindingResult.MODEL_KEY_PREFIX + COMMAND_NAME, errors);
 
 		// replace the request context with one containing the errors
 		MockPageContext pageContext = getPageContext();
@@ -127,18 +125,18 @@ public abstract class AbstractHtmlElementTagTests extends AbstractTagTests {
 		assertTrue("Expected to find attribute '" + attributeName +
 				"' with value '" + attributeValue +
 				"' in output + '" + output + "'",
-				output.contains(attributeString));
+				output.indexOf(attributeString) > -1);
 	}
 
 	protected final void assertAttributeNotPresent(String output, String attributeName) {
 		assertTrue("Unexpected attribute '" + attributeName + "' in output '" + output + "'.",
-				!output.contains(attributeName + "=\""));
+				output.indexOf(attributeName + "=\"") < 0);
 	}
 
 	protected final void assertBlockTagContains(String output, String desiredContents) {
 		String contents = output.substring(output.indexOf(">") + 1, output.lastIndexOf("<"));
 		assertTrue("Expected to find '" + desiredContents + "' in the contents of block tag '" + output + "'",
-				contents.contains(desiredContents));
+				contents.indexOf(desiredContents) > -1);
 	}
 
 }

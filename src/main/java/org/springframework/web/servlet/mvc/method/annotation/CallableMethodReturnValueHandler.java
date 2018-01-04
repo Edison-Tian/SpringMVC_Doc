@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ package org.springframework.web.servlet.mvc.method.annotation;
 import java.util.concurrent.Callable;
 
 import org.springframework.core.MethodParameter;
-import org.springframework.lang.Nullable;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.context.request.async.WebAsyncUtils;
 import org.springframework.web.method.support.HandlerMethodReturnValueHandler;
@@ -33,14 +32,14 @@ import org.springframework.web.method.support.ModelAndViewContainer;
  */
 public class CallableMethodReturnValueHandler implements HandlerMethodReturnValueHandler {
 
-	@Override
 	public boolean supportsReturnType(MethodParameter returnType) {
-		return Callable.class.isAssignableFrom(returnType.getParameterType());
+		Class<?> paramType = returnType.getParameterType();
+		return Callable.class.isAssignableFrom(paramType);
 	}
 
-	@Override
-	public void handleReturnValue(@Nullable Object returnValue, MethodParameter returnType,
-			ModelAndViewContainer mavContainer, NativeWebRequest webRequest) throws Exception {
+	public void handleReturnValue(Object returnValue,
+			MethodParameter returnType, ModelAndViewContainer mavContainer,
+			NativeWebRequest webRequest) throws Exception {
 
 		if (returnValue == null) {
 			mavContainer.setRequestHandled(true);

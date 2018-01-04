@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2015 the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,9 @@
 package org.springframework.web.servlet.tags.form;
 
 import java.io.Writer;
+
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.Tag;
-
-import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 /**
  * @author Rob Harrop
@@ -31,11 +28,10 @@ import static org.junit.Assert.*;
  */
 public class PasswordInputTagTests extends InputTagTests {
 
-	/**
-	 * https://jira.spring.io/browse/SPR-2866
+	/*
+	 * http://opensource.atlassian.com/projects/spring/browse/SPR-2866
 	 */
-	@Test
-	public void passwordValueIsNotRenderedByDefault() throws Exception {
+	public void testPasswordValueIsNotRenderedByDefault() throws Exception {
 		this.getTag().setPath("name");
 
 		assertEquals(Tag.SKIP_BODY, this.getTag().doStartTag());
@@ -48,11 +44,10 @@ public class PasswordInputTagTests extends InputTagTests {
 		assertValueAttribute(output, "");
 	}
 
-	/**
-	 * https://jira.spring.io/browse/SPR-2866
+	/*
+	 * http://opensource.atlassian.com/projects/spring/browse/SPR-2866
 	 */
-	@Test
-	public void passwordValueIsRenderedIfShowPasswordAttributeIsSetToTrue() throws Exception {
+	public void testPasswordValueIsRenderedIfShowPasswordAttributeIsSetToTrue() throws Exception {
 		this.getTag().setPath("name");
 		this.getPasswordTag().setShowPassword(true);
 
@@ -66,11 +61,10 @@ public class PasswordInputTagTests extends InputTagTests {
 		assertValueAttribute(output, "Rob");
 	}
 
-	/**
-	 * https://jira.spring.io/browse/SPR-2866
+	/*
+	 * http://opensource.atlassian.com/projects/spring/browse/SPR-2866
 	 */
-	@Test
-	public void passwordValueIsNotRenderedIfShowPasswordAttributeIsSetToFalse() throws Exception {
+	public void testPasswordValueIsNotRenderedIfShowPasswordAttributeIsSetToFalse() throws Exception {
 		this.getTag().setPath("name");
 		this.getPasswordTag().setShowPassword(false);
 
@@ -84,9 +78,8 @@ public class PasswordInputTagTests extends InputTagTests {
 		assertValueAttribute(output, "");
 	}
 
-	@Test
 	@Override
-	public void dynamicTypeAttribute() throws JspException {
+	public void testDynamicTypeAttribute() throws JspException {
 		try {
 			this.getTag().setDynamicAttribute(null, "type", "email");
 			fail("Expected exception");
@@ -100,8 +93,7 @@ public class PasswordInputTagTests extends InputTagTests {
 	protected void assertValueAttribute(String output, String expectedValue) {
 		if (this.getPasswordTag().isShowPassword()) {
 			super.assertValueAttribute(output, expectedValue);
-		}
-		else {
+		} else {
 			super.assertValueAttribute(output, "");
 		}
 	}
@@ -125,5 +117,4 @@ public class PasswordInputTagTests extends InputTagTests {
 	private PasswordInputTag getPasswordTag() {
 		return (PasswordInputTag) this.getTag();
 	}
-
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,6 @@ package org.springframework.web.servlet.mvc.condition;
 import java.util.Collection;
 import java.util.Iterator;
 
-import org.springframework.lang.Nullable;
-
 /**
  * A base class for {@link RequestCondition} types providing implementations of
  * {@link #equals(Object)}, {@link #hashCode()}, and {@link #toString()}.
@@ -31,36 +29,19 @@ import org.springframework.lang.Nullable;
 public abstract class AbstractRequestCondition<T extends AbstractRequestCondition<T>> implements RequestCondition<T> {
 
 	/**
-	 * Indicates whether this condition is empty, i.e. whether or not it
-	 * contains any discrete items.
-	 * @return {@code true} if empty; {@code false} otherwise
-	 */
-	public boolean isEmpty() {
-		return getContent().isEmpty();
-	}
-
-	/**
 	 * Return the discrete items a request condition is composed of.
-	 * <p>For example URL patterns, HTTP request methods, param expressions, etc.
+	 * For example URL patterns, HTTP request methods, param expressions, etc.
 	 * @return a collection of objects, never {@code null}
 	 */
 	protected abstract Collection<?> getContent();
 
-	/**
-	 * The notation to use when printing discrete items of content.
-	 * <p>For example {@code " || "} for URL patterns or {@code " && "}
-	 * for param expressions.
-	 */
-	protected abstract String getToStringInfix();
-
-
 	@Override
-	public boolean equals(@Nullable Object obj) {
-		if (this == obj) {
+	public boolean equals(Object o) {
+		if (this == o) {
 			return true;
 		}
-		if (obj != null && getClass() == obj.getClass()) {
-			AbstractRequestCondition<?> other = (AbstractRequestCondition<?>) obj;
+		if (o != null && getClass().equals(o.getClass())) {
+			AbstractRequestCondition<?> other = (AbstractRequestCondition<?>) o;
 			return getContent().equals(other.getContent());
 		}
 		return false;
@@ -84,5 +65,11 @@ public abstract class AbstractRequestCondition<T extends AbstractRequestConditio
 		builder.append("]");
 		return builder.toString();
 	}
+
+	/**
+	 * The notation to use when printing discrete items of content.
+	 * For example " || " for URL patterns or " && " for param expressions.
+	 */
+	protected abstract String getToStringInfix();
 
 }

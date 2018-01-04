@@ -17,6 +17,7 @@
 package org.springframework.web.servlet.tags.form;
 
 import java.util.Collection;
+
 import javax.servlet.jsp.JspException;
 
 import org.springframework.web.bind.WebDataBinder;
@@ -38,7 +39,7 @@ import org.springframework.web.bind.WebDataBinder;
  * the bound {@link Collection}.
  * <h3>Approach Three</h3>
  * For any other bound value type, the '{@code input(checkbox)}' is marked as 'checked'
- * if the configured {@link #setValue(Object) value} is equal to the bound value.
+ * if the the configured {@link #setValue(Object) value} is equal to the bound value.
  *
  * @author Rob Harrop
  * @author Juergen Hoeller
@@ -69,9 +70,9 @@ public class CheckboxTag extends AbstractSingleCheckedElementTag {
 		tagWriter.writeAttribute("type", getInputType());
 
 		Object boundValue = getBoundValue();
-		Class<?> valueType = getBindStatus().getValueType();
+		Class valueType = getBindStatus().getValueType();
 
-		if (Boolean.class == valueType || boolean.class == valueType) {
+		if (Boolean.class.equals(valueType) || boolean.class.equals(valueType)) {
 			// the concrete type may not be a Boolean - can be String
 			if (boundValue instanceof String) {
 				boundValue = Boolean.valueOf((String) boundValue);

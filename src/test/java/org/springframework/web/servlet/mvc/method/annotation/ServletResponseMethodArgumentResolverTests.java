@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,11 +29,12 @@ import org.springframework.mock.web.test.MockHttpServletRequest;
 import org.springframework.mock.web.test.MockHttpServletResponse;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.method.support.ModelAndViewContainer;
+import org.springframework.web.servlet.mvc.method.annotation.ServletResponseMethodArgumentResolver;
 
 import static org.junit.Assert.*;
 
 /**
- * Test fixture with {@link ServletResponseMethodArgumentResolver}.
+ * Test fixture with {@link org.springframework.web.servlet.mvc.method.annotation.ServletRequestMethodArgumentResolver}.
  *
  * @author Arjen Poutsma
  */
@@ -41,29 +42,27 @@ public class ServletResponseMethodArgumentResolverTests {
 
 	private ServletResponseMethodArgumentResolver resolver;
 
-	private ModelAndViewContainer mavContainer;
+	private Method method;
 
-	private MockHttpServletResponse servletResponse;
+	private ModelAndViewContainer mavContainer;
 
 	private ServletWebRequest webRequest;
 
-	private Method method;
-
+	private MockHttpServletResponse servletResponse;
 
 	@Before
-	public void setup() throws Exception {
+	public void setUp() throws Exception {
 		resolver = new ServletResponseMethodArgumentResolver();
-		mavContainer = new ModelAndViewContainer();
-		servletResponse = new MockHttpServletResponse();
-		webRequest = new ServletWebRequest(new MockHttpServletRequest(), servletResponse);
-
 		method = getClass().getMethod("supportedParams", ServletResponse.class, OutputStream.class, Writer.class);
+		servletResponse = new MockHttpServletResponse();
+		mavContainer = new ModelAndViewContainer();
+		webRequest = new ServletWebRequest(new MockHttpServletRequest(), servletResponse);
 	}
-
 
 	@Test
 	public void servletResponse() throws Exception {
 		MethodParameter servletResponseParameter = new MethodParameter(method, 0);
+
 		assertTrue("ServletResponse not supported", resolver.supportsParameter(servletResponseParameter));
 
 		Object result = resolver.resolveArgument(servletResponseParameter, mavContainer, webRequest, null);
@@ -71,7 +70,8 @@ public class ServletResponseMethodArgumentResolverTests {
 		assertTrue(mavContainer.isRequestHandled());
 	}
 
-	@Test  // SPR-8983
+	// SPR-8983
+
 	public void servletResponseNoMavContainer() throws Exception {
 		MethodParameter servletResponseParameter = new MethodParameter(method, 0);
 		assertTrue("ServletResponse not supported", resolver.supportsParameter(servletResponseParameter));
@@ -83,6 +83,7 @@ public class ServletResponseMethodArgumentResolverTests {
 	@Test
 	public void outputStream() throws Exception {
 		MethodParameter outputStreamParameter = new MethodParameter(method, 1);
+
 		assertTrue("OutputStream not supported", resolver.supportsParameter(outputStreamParameter));
 
 		Object result = resolver.resolveArgument(outputStreamParameter, mavContainer, webRequest, null);
@@ -93,6 +94,7 @@ public class ServletResponseMethodArgumentResolverTests {
 	@Test
 	public void writer() throws Exception {
 		MethodParameter writerParameter = new MethodParameter(method, 2);
+
 		assertTrue("Writer not supported", resolver.supportsParameter(writerParameter));
 
 		Object result = resolver.resolveArgument(writerParameter, mavContainer, webRequest, null);
@@ -100,9 +102,7 @@ public class ServletResponseMethodArgumentResolverTests {
 		assertTrue(mavContainer.isRequestHandled());
 	}
 
-
-	@SuppressWarnings("unused")
 	public void supportedParams(ServletResponse p0, OutputStream p1, Writer p2) {
-	}
 
+	}
 }

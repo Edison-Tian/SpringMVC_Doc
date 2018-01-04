@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2015 the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,31 +18,34 @@ package org.springframework.web.servlet.tags.form;
 
 import java.io.StringWriter;
 
-import org.junit.Test;
-
-import static org.junit.Assert.*;
+import junit.framework.TestCase;
 
 /**
  * @author Rob Harrop
  * @author Rick Evans
  */
-public class TagWriterTests {
+public class TagWriterTests extends TestCase {
 
-	private final StringWriter data = new StringWriter();
+	private TagWriter writer;
 
-	private final TagWriter writer = new TagWriter(this.data);
+	private StringWriter data;
 
 
-	@Test
-	public void simpleTag() throws Exception {
+	@Override
+	protected void setUp() throws Exception {
+		this.data = new StringWriter();
+		this.writer = new TagWriter(this.data);
+	}
+
+
+	public void testSimpleTag() throws Exception {
 		this.writer.startTag("br");
 		this.writer.endTag();
 
 		assertEquals("<br/>", this.data.toString());
 	}
 
-	@Test
-	public void emptyTag() throws Exception {
+	public void testEmptyTag() throws Exception {
 		this.writer.startTag("input");
 		this.writer.writeAttribute("type", "text");
 		this.writer.endTag();
@@ -50,8 +53,7 @@ public class TagWriterTests {
 		assertEquals("<input type=\"text\"/>", this.data.toString());
 	}
 
-	@Test
-	public void simpleBlockTag() throws Exception {
+	public void testSimpleBlockTag() throws Exception {
 		this.writer.startTag("textarea");
 		this.writer.appendValue("foobar");
 		this.writer.endTag();
@@ -59,8 +61,7 @@ public class TagWriterTests {
 		assertEquals("<textarea>foobar</textarea>", this.data.toString());
 	}
 
-	@Test
-	public void blockTagWithAttributes() throws Exception {
+	public void testBlockTagWithAttributes() throws Exception {
 		this.writer.startTag("textarea");
 		this.writer.writeAttribute("width", "10");
 		this.writer.writeAttribute("height", "20");
@@ -70,8 +71,7 @@ public class TagWriterTests {
 		assertEquals("<textarea width=\"10\" height=\"20\">foobar</textarea>", this.data.toString());
 	}
 
-	@Test
-	public void nestedTags() throws Exception {
+	public void testNestedTags() throws Exception {
 		this.writer.startTag("span");
 		this.writer.writeAttribute("style", "foo");
 		this.writer.startTag("strong");
@@ -82,8 +82,7 @@ public class TagWriterTests {
 		assertEquals("<span style=\"foo\"><strong>Rob Harrop</strong></span>", this.data.toString());
 	}
 
-	@Test
-	public void multipleNestedTags() throws Exception {
+	public void testMultipleNestedTags() throws Exception {
 		this.writer.startTag("span");
 		this.writer.writeAttribute("class", "highlight");
 		{
@@ -102,8 +101,7 @@ public class TagWriterTests {
 		assertEquals("<span class=\"highlight\"><strong>Rob</strong> <emphasis>Harrop</emphasis></span>", this.data.toString());
 	}
 
-	@Test
-	public void writeInterleavedWithForceBlock() throws Exception {
+	public void testWriteInterleavedWithForceBlock() throws Exception {
 		this.writer.startTag("span");
 		this.writer.forceBlock();
 		this.data.write("Rob Harrop"); // interleaved writing
@@ -112,8 +110,7 @@ public class TagWriterTests {
 		assertEquals("<span>Rob Harrop</span>", this.data.toString());
 	}
 
-	@Test
-	public void appendingValue() throws Exception {
+	public void testAppendingValue() throws Exception {
 		this.writer.startTag("span");
 		this.writer.appendValue("Rob ");
 		this.writer.appendValue("Harrop");

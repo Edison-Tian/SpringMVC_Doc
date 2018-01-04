@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.servlet.http.HttpServletRequest;
 
-import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.HandlerMapping;
 
@@ -31,12 +30,13 @@ import org.springframework.web.servlet.HandlerMapping;
  * <p>Can optionally prepend a {@link #setPrefix prefix} and/or append a
  * {@link #setSuffix suffix} to build the viewname from the URL filename.
  *
- * <p>Find some examples below:
+ * <p>Find below some examples:
+ *
  * <ol>
- * <li>{@code "/index" -> "index"}</li>
- * <li>{@code "/index.html" -> "index"}</li>
- * <li>{@code "/index.html"} + prefix {@code "pre_"} and suffix {@code "_suf" -> "pre_index_suf"}</li>
- * <li>{@code "/products/view.html" -> "products/view"}</li>
+ *   <li>{@code "/index" -> "index"}</li>
+ *   <li>{@code "/index.html" -> "index"}</li>
+ *   <li>{@code "/index.html"} + prefix {@code "pre_"} and suffix {@code "_suf" -> "pre_index_suf"}</li>
+ *   <li>{@code "/products/view.html" -> "products/view"}</li>
  * </ol>
  *
  * <p>Thanks to David Barri for suggesting prefix/suffix support!
@@ -54,14 +54,14 @@ public class UrlFilenameViewController extends AbstractUrlViewController {
 	private String suffix = "";
 
 	/** Request URL path String --> view name String */
-	private final Map<String, String> viewNameCache = new ConcurrentHashMap<>(256);
+	private final Map<String, String> viewNameCache = new ConcurrentHashMap<String, String>(256);
 
 
 	/**
 	 * Set the prefix to prepend to the request URL filename
 	 * to build a view name.
 	 */
-	public void setPrefix(@Nullable String prefix) {
+	public void setPrefix(String prefix) {
 		this.prefix = (prefix != null ? prefix : "");
 	}
 
@@ -76,7 +76,7 @@ public class UrlFilenameViewController extends AbstractUrlViewController {
 	 * Set the suffix to append to the request URL filename
 	 * to build a view name.
 	 */
-	public void setSuffix(@Nullable String suffix) {
+	public void setSuffix(String suffix) {
 		this.suffix = (suffix != null ? suffix : "");
 	}
 

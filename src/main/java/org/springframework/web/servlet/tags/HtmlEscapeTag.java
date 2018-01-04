@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2013 the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@ package org.springframework.web.servlet.tags;
 
 import javax.servlet.jsp.JspException;
 
+import org.springframework.web.util.ExpressionEvaluationUtils;
+
 /**
  * Sets default HTML escape value for the current page. The actual value
  * can be overridden by escaping-aware tags. The default is "false".
@@ -32,21 +34,23 @@ import javax.servlet.jsp.JspException;
 @SuppressWarnings("serial")
 public class HtmlEscapeTag extends RequestContextAwareTag {
 
-	private boolean defaultHtmlEscape;
+	private String defaultHtmlEscape;
 
 
 	/**
 	 * Set the default value for HTML escaping,
 	 * to be put into the current PageContext.
 	 */
-	public void setDefaultHtmlEscape(boolean defaultHtmlEscape) {
+	public void setDefaultHtmlEscape(String defaultHtmlEscape) {
 		this.defaultHtmlEscape = defaultHtmlEscape;
 	}
 
 
 	@Override
 	protected int doStartTagInternal() throws JspException {
-		getRequestContext().setDefaultHtmlEscape(this.defaultHtmlEscape);
+		boolean resolvedDefaultHtmlEscape =
+				ExpressionEvaluationUtils.evaluateBoolean("defaultHtmlEscape", this.defaultHtmlEscape, pageContext);
+		getRequestContext().setDefaultHtmlEscape(resolvedDefaultHtmlEscape);
 		return EVAL_BODY_INCLUDE;
 	}
 

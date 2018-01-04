@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2013 the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -76,12 +76,12 @@ public class OptionTag extends AbstractHtmlElementBodyTag implements BodyTag {
 
 
 	/**
-	 * The 'value' attribute of the rendered HTML {@code <option>} tag.
+	 * The 'value' attribute of the rendered HTML {@code &lt;option&gt;} tag.
 	 */
 	private Object value;
 
 	/**
-	 * The text body of the rendered HTML {@code <option>} tag.
+	 * The text body of the rendered HTML {@code &lt;option&gt;} tag.
 	 */
 	private String label;
 
@@ -89,18 +89,19 @@ public class OptionTag extends AbstractHtmlElementBodyTag implements BodyTag {
 
 	private Object oldDisplayValue;
 
-	private boolean disabled;
+	private String disabled;
 
 
 	/**
-	 * Set the 'value' attribute of the rendered HTML {@code <option>} tag.
+	 * Set the 'value' attribute of the rendered HTML {@code &lt;option&gt;} tag.
+	 * <p>May be a runtime expression.
 	 */
 	public void setValue(Object value) {
 		this.value = value;
 	}
 
 	/**
-	 * Get the 'value' attribute of the rendered HTML {@code <option>} tag.
+	 * Get the 'value' attribute of the rendered HTML {@code &lt;option&gt;} tag.
 	 */
 	protected Object getValue() {
 		return this.value;
@@ -108,20 +109,30 @@ public class OptionTag extends AbstractHtmlElementBodyTag implements BodyTag {
 
 	/**
 	 * Set the value of the '{@code disabled}' attribute.
+	 * <p>May be a runtime expression.
+	 * @param disabled the value of the '{@code disabled}' attribute
 	 */
-	public void setDisabled(boolean disabled) {
+	public void setDisabled(String disabled) {
 		this.disabled = disabled;
 	}
 
 	/**
 	 * Get the value of the '{@code disabled}' attribute.
 	 */
-	protected boolean isDisabled() {
+	protected String getDisabled() {
 		return this.disabled;
 	}
 
 	/**
-	 * Set the text body of the rendered HTML {@code <option>} tag.
+	 * Is the current HTML tag disabled?
+	 * @return {@code true} if this tag is disabled
+	 */
+	protected boolean isDisabled() throws JspException {
+		return evaluateBoolean(DISABLED_ATTRIBUTE, getDisabled());
+	}
+
+	/**
+	 * Set the text body of the rendered HTML {@code &lt;option&gt;} tag.
 	 * <p>May be a runtime expression.
 	 */
 	public void setLabel(String label) {
@@ -130,7 +141,7 @@ public class OptionTag extends AbstractHtmlElementBodyTag implements BodyTag {
 	}
 
 	/**
-	 * Get the text body of the rendered HTML {@code <option>} tag.
+	 * Get the text body of the rendered HTML {@code &lt;option&gt;} tag.
 	 */
 	protected String getLabel() {
 		return this.label;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2015 the original author or authors.
+ * Copyright 2002-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.Tag;
 
@@ -31,23 +32,18 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
-import org.junit.Test;
-
-import org.springframework.beans.propertyeditors.StringTrimmerEditor;
 import org.springframework.tests.sample.beans.Colour;
 import org.springframework.tests.sample.beans.Pet;
 import org.springframework.tests.sample.beans.TestBean;
+import org.springframework.beans.propertyeditors.StringTrimmerEditor;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
-
-import static org.junit.Assert.*;
 
 /**
  * @author Rob Harrop
  * @author Juergen Hoeller
  * @author Jeremy Grelle
  */
-@SuppressWarnings({ "rawtypes", "unchecked" })
 public class CheckboxTagTests extends AbstractFormTagTests {
 
 	private CheckboxTag tag;
@@ -66,8 +62,7 @@ public class CheckboxTagTests extends AbstractFormTagTests {
 		this.tag.setPageContext(getPageContext());
 	}
 
-	@Test
-	public void withSingleValueBooleanObjectChecked() throws Exception {
+	public void testWithSingleValueBooleanObjectChecked() throws Exception {
 		this.tag.setPath("someBoolean");
 		int result = this.tag.doStartTag();
 		assertEquals(Tag.SKIP_BODY, result);
@@ -89,8 +84,7 @@ public class CheckboxTagTests extends AbstractFormTagTests {
 		assertEquals("true", checkboxElement.attribute("value").getValue());
 	}
 
-	@Test
-	public void withIndexedBooleanObjectNotChecked() throws Exception {
+	public void testWithIndexedBooleanObjectNotChecked() throws Exception {
 		this.tag.setPath("someMap[key]");
 		int result = this.tag.doStartTag();
 		assertEquals(Tag.SKIP_BODY, result);
@@ -112,8 +106,7 @@ public class CheckboxTagTests extends AbstractFormTagTests {
 		assertEquals("true", checkboxElement.attribute("value").getValue());
 	}
 
-	@Test
-	public void withSingleValueBooleanObjectCheckedAndDynamicAttributes() throws Exception {
+	public void testWithSingleValueBooleanObjectCheckedAndDynamicAttributes() throws Exception {
 		String dynamicAttribute1 = "attr1";
 		String dynamicAttribute2 = "attr2";
 
@@ -142,8 +135,7 @@ public class CheckboxTagTests extends AbstractFormTagTests {
 		assertEquals(dynamicAttribute2, checkboxElement.attribute(dynamicAttribute2).getValue());
 	}
 
-	@Test
-	public void withSingleValueBooleanChecked() throws Exception {
+	public void testWithSingleValueBooleanChecked() throws Exception {
 		this.tag.setPath("jedi");
 		int result = this.tag.doStartTag();
 		assertEquals(Tag.SKIP_BODY, result);
@@ -162,9 +154,8 @@ public class CheckboxTagTests extends AbstractFormTagTests {
 		assertEquals("true", checkboxElement.attribute("value").getValue());
 	}
 
-	@Test
-	public void withSingleValueBooleanObjectUnchecked() throws Exception {
-		this.bean.setSomeBoolean(Boolean.FALSE);
+	public void testWithSingleValueBooleanObjectUnchecked() throws Exception {
+		this.bean.setSomeBoolean(new Boolean(false));
 		this.tag.setPath("someBoolean");
 		int result = this.tag.doStartTag();
 		assertEquals(Tag.SKIP_BODY, result);
@@ -184,8 +175,7 @@ public class CheckboxTagTests extends AbstractFormTagTests {
 		assertEquals("true", checkboxElement.attribute("value").getValue());
 	}
 
-	@Test
-	public void withSingleValueBooleanUnchecked() throws Exception {
+	public void testWithSingleValueBooleanUnchecked() throws Exception {
 		this.bean.setJedi(false);
 		this.tag.setPath("jedi");
 		int result = this.tag.doStartTag();
@@ -206,8 +196,7 @@ public class CheckboxTagTests extends AbstractFormTagTests {
 		assertEquals("true", checkboxElement.attribute("value").getValue());
 	}
 
-	@Test
-	public void withSingleValueNull() throws Exception {
+	public void testWithSingleValueNull() throws Exception {
 		this.bean.setName(null);
 		this.tag.setPath("name");
 		this.tag.setValue("Rob Harrop");
@@ -229,8 +218,7 @@ public class CheckboxTagTests extends AbstractFormTagTests {
 		assertEquals("Rob Harrop", checkboxElement.attribute("value").getValue());
 	}
 
-	@Test
-	public void withSingleValueNotNull() throws Exception {
+	public void testWithSingleValueNotNull() throws Exception {
 		this.bean.setName("Rob Harrop");
 		this.tag.setPath("name");
 		this.tag.setValue("Rob Harrop");
@@ -252,8 +240,7 @@ public class CheckboxTagTests extends AbstractFormTagTests {
 		assertEquals("Rob Harrop", checkboxElement.attribute("value").getValue());
 	}
 
-	@Test
-	public void withSingleValueAndEditor() throws Exception {
+	public void testWithSingleValueAndEditor() throws Exception {
 		this.bean.setName("Rob Harrop");
 		this.tag.setPath("name");
 		this.tag.setValue("   Rob Harrop");
@@ -279,8 +266,7 @@ public class CheckboxTagTests extends AbstractFormTagTests {
 		assertEquals("   Rob Harrop", checkboxElement.attribute("value").getValue());
 	}
 
-	@Test
-	public void withMultiValueChecked() throws Exception {
+	public void testWithMultiValueChecked() throws Exception {
 		this.tag.setPath("stringArray");
 		this.tag.setValue("foo");
 		int result = this.tag.doStartTag();
@@ -301,8 +287,7 @@ public class CheckboxTagTests extends AbstractFormTagTests {
 		assertEquals("foo", checkboxElement.attribute("value").getValue());
 	}
 
-	@Test
-	public void withMultiValueUnchecked() throws Exception {
+	public void testWithMultiValueUnchecked() throws Exception {
 		this.tag.setPath("stringArray");
 		this.tag.setValue("abc");
 		int result = this.tag.doStartTag();
@@ -323,8 +308,7 @@ public class CheckboxTagTests extends AbstractFormTagTests {
 		assertEquals("abc", checkboxElement.attribute("value").getValue());
 	}
 
-	@Test
-	public void withMultiValueWithEditor() throws Exception {
+	public void testWithMultiValueWithEditor() throws Exception {
 		this.tag.setPath("stringArray");
 		this.tag.setValue("   foo");
 		BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(this.bean, COMMAND_NAME);
@@ -351,8 +335,7 @@ public class CheckboxTagTests extends AbstractFormTagTests {
 		assertEquals("   foo", checkboxElement.attribute("value").getValue());
 	}
 
-	@Test
-	public void withMultiValueIntegerWithEditor() throws Exception {
+	public void testWithMultiValueIntegerWithEditor() throws Exception {
 		this.tag.setPath("someIntegerArray");
 		this.tag.setValue("   1");
 		BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(this.bean, COMMAND_NAME);
@@ -379,8 +362,7 @@ public class CheckboxTagTests extends AbstractFormTagTests {
 		assertEquals("   1", checkboxElement.attribute("value").getValue());
 	}
 
-	@Test
-	public void withCollection() throws Exception {
+	public void testWithCollection() throws Exception {
 		this.tag.setPath("someList");
 		this.tag.setValue("foo");
 		int result = this.tag.doStartTag();
@@ -401,8 +383,7 @@ public class CheckboxTagTests extends AbstractFormTagTests {
 		assertEquals("foo", checkboxElement.attribute("value").getValue());
 	}
 
-	@Test
-	public void withObjectChecked() throws Exception {
+	public void testWithObjectChecked() throws Exception {
 		this.tag.setPath("date");
 		this.tag.setValue(getDate());
 
@@ -424,8 +405,7 @@ public class CheckboxTagTests extends AbstractFormTagTests {
 		assertEquals(getDate().toString(), checkboxElement.attribute("value").getValue());
 	}
 
-	@Test
-	public void withObjectUnchecked() throws Exception {
+	public void testWithObjectUnchecked() throws Exception {
 		this.tag.setPath("date");
 		Date date = new Date();
 		this.tag.setValue(date);
@@ -448,8 +428,7 @@ public class CheckboxTagTests extends AbstractFormTagTests {
 		assertEquals(date.toString(), checkboxElement.attribute("value").getValue());
 	}
 
-	@Test
-	public void collectionOfColoursSelected() throws Exception {
+	public void testCollectionOfColoursSelected() throws Exception {
 		this.tag.setPath("otherColours");
 		this.tag.setValue("RED");
 
@@ -470,8 +449,7 @@ public class CheckboxTagTests extends AbstractFormTagTests {
 		assertEquals("checked", checkboxElement.attribute("checked").getValue());
 	}
 
-	@Test
-	public void collectionOfColoursNotSelected() throws Exception {
+	public void testCollectionOfColoursNotSelected() throws Exception {
 		this.tag.setPath("otherColours");
 		this.tag.setValue("PURPLE");
 
@@ -492,8 +470,7 @@ public class CheckboxTagTests extends AbstractFormTagTests {
 		assertNull(checkboxElement.attribute("checked"));
 	}
 
-	@Test
-	public void collectionOfPetsAsString() throws Exception {
+	public void testCollectionOfPetsAsString() throws Exception {
 		this.tag.setPath("pets");
 		this.tag.setValue("Spot");
 
@@ -514,8 +491,7 @@ public class CheckboxTagTests extends AbstractFormTagTests {
 		assertEquals("checked", checkboxElement.attribute("checked").getValue());
 	}
 
-	@Test
-	public void collectionOfPetsAsStringNotSelected() throws Exception {
+	public void testCollectionOfPetsAsStringNotSelected() throws Exception {
 		this.tag.setPath("pets");
 		this.tag.setValue("Santa's Little Helper");
 
@@ -536,8 +512,7 @@ public class CheckboxTagTests extends AbstractFormTagTests {
 		assertNull(checkboxElement.attribute("checked"));
 	}
 
-	@Test
-	public void collectionOfPets() throws Exception {
+	public void testCollectionOfPets() throws Exception {
 		this.tag.setPath("pets");
 		this.tag.setValue(new Pet("Rudiger"));
 
@@ -559,8 +534,7 @@ public class CheckboxTagTests extends AbstractFormTagTests {
 		assertEquals("checked", checkboxElement.attribute("checked").getValue());
 	}
 
-	@Test
-	public void collectionOfPetsNotSelected() throws Exception {
+	public void testCollectionOfPetsNotSelected() throws Exception {
 		this.tag.setPath("pets");
 		this.tag.setValue(new Pet("Santa's Little Helper"));
 
@@ -582,8 +556,7 @@ public class CheckboxTagTests extends AbstractFormTagTests {
 		assertNull(checkboxElement.attribute("checked"));
 	}
 
-	@Test
-	public void collectionOfPetsWithEditor() throws Exception {
+	public void testCollectionOfPetsWithEditor() throws Exception {
 		this.tag.setPath("pets");
 		this.tag.setValue(new ItemPet("Rudiger"));
 
@@ -610,8 +583,7 @@ public class CheckboxTagTests extends AbstractFormTagTests {
 		assertEquals("checked", checkboxElement.attribute("checked").getValue());
 	}
 
-	@Test
-	public void withNullValue() throws Exception {
+	public void testWithNullValue() throws Exception {
 		try {
 			this.tag.setPath("name");
 			this.tag.doStartTag();
@@ -622,10 +594,9 @@ public class CheckboxTagTests extends AbstractFormTagTests {
 		}
 	}
 
-	@Test
-	public void hiddenElementOmittedOnDisabled() throws Exception {
+	public void testHiddenElementOmittedOnDisabled() throws Exception {
 		this.tag.setPath("someBoolean");
-		this.tag.setDisabled(true);
+		this.tag.setDisabled("true");
 		int result = this.tag.doStartTag();
 		assertEquals(Tag.SKIP_BODY, result);
 		String output = getOutput();
@@ -645,8 +616,7 @@ public class CheckboxTagTests extends AbstractFormTagTests {
 		assertEquals("true", checkboxElement.attribute("value").getValue());
 	}
 
-	@Test
-	public void dynamicTypeAttribute() throws JspException {
+	public void testDynamicTypeAttribute() throws JspException {
 		try {
 			this.tag.setDynamicAttribute(null, "type", "email");
 			fail("Expected exception");
@@ -692,7 +662,7 @@ public class CheckboxTagTests extends AbstractFormTagTests {
 		this.bean.setDate(getDate());
 		this.bean.setName("Rob Harrop");
 		this.bean.setJedi(true);
-		this.bean.setSomeBoolean(Boolean.TRUE);
+		this.bean.setSomeBoolean(new Boolean(true));
 		this.bean.setStringArray(new String[] {"bar", "foo"});
 		this.bean.setSomeIntegerArray(new Integer[] {new Integer(2), new Integer(1)});
 		this.bean.setOtherColours(colours);

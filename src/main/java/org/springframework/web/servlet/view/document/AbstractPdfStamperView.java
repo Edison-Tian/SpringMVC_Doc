@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2008 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,13 @@ package org.springframework.web.servlet.view.document;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Map;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.lowagie.text.pdf.PdfReader;
 import com.lowagie.text.pdf.PdfStamper;
 
-import org.springframework.util.Assert;
 import org.springframework.web.servlet.view.AbstractUrlBasedView;
 
 /**
@@ -76,9 +76,7 @@ public abstract class AbstractPdfStamperView extends AbstractUrlBasedView {
 	 * @see #setUrl
 	 */
 	protected PdfReader readPdfResource() throws IOException {
-		String url = getUrl();
-		Assert.state(url != null, "'url' not set");
-		return new PdfReader(obtainApplicationContext().getResource(url).getInputStream());
+		return new PdfReader(getApplicationContext().getResource(getUrl()).getInputStream());
 	}
 
 	/**
@@ -105,7 +103,7 @@ public abstract class AbstractPdfStamperView extends AbstractUrlBasedView {
 	 * e.g. setting the "formFlattening" property.
 	 * @param request in case we need locale etc. Shouldn't look at attributes.
 	 * @param response in case we need to set cookies. Shouldn't write to it.
-	 * @throws Exception any exception that occurred during document building
+	 * @throws Exception any exception that occured during document building
      */
 	protected abstract void mergePdfDocument(Map<String, Object> model, PdfStamper stamper,
 			HttpServletRequest request, HttpServletResponse response) throws Exception;

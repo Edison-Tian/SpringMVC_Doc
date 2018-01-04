@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2013 the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,6 @@ package org.springframework.web.servlet.support;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
-
-import org.springframework.lang.Nullable;
 
 /**
  * A contract for inspecting and potentially modifying request data values such
@@ -44,10 +42,9 @@ public interface RequestDataValueProcessor {
 	 * Invoked when a new form action is rendered.
 	 * @param request the current request
 	 * @param action the form action
-	 * @param httpMethod the form HTTP method
 	 * @return the action to use, possibly modified
 	 */
-	String processAction(HttpServletRequest request, String action, String httpMethod);
+	String processAction(HttpServletRequest request, String action);
 
 	/**
 	 * Invoked when a form field value is rendered.
@@ -64,7 +61,6 @@ public interface RequestDataValueProcessor {
 	 * @param request the current request
 	 * @return additional hidden form fields to be added, or {@code null}
 	 */
-	@Nullable
 	Map<String, String> getExtraHiddenFields(HttpServletRequest request);
 
 	/**

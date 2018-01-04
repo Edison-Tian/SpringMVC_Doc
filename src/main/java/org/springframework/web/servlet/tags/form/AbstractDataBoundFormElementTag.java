@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,13 +17,14 @@
 package org.springframework.web.servlet.tags.form;
 
 import java.beans.PropertyEditor;
+
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.PageContext;
 
 import org.springframework.beans.PropertyAccessor;
-import org.springframework.lang.Nullable;
+import org.springframework.core.Conventions;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.support.BindStatus;
 import org.springframework.web.servlet.support.RequestDataValueProcessor;
@@ -50,6 +51,15 @@ public abstract class AbstractDataBoundFormElementTag extends AbstractFormTag im
 	 * Same value as {@link org.springframework.web.servlet.tags.NestedPathTag#NESTED_PATH_VARIABLE_NAME}.
 	 */
 	protected static final String NESTED_PATH_VARIABLE_NAME = NestedPathTag.NESTED_PATH_VARIABLE_NAME;
+
+	/**
+	 * The name of the {@link javax.servlet.jsp.PageContext} attribute under which the
+	 * command object name is exposed.
+	 * @deprecated as of Spring 2.5, in favor of {@link FormTag#MODEL_ATTRIBUTE_VARIABLE_NAME}
+	 */
+	@Deprecated
+	public static final String COMMAND_NAME_VARIABLE_NAME =
+			Conventions.getQualifiedAttributeName(AbstractFormTag.class, "commandName");
 
 
 	/**
@@ -124,7 +134,6 @@ public abstract class AbstractDataBoundFormElementTag extends AbstractFormTag im
 	 * @see #getId()
 	 * @see #autogenerateId()
 	 */
-	@Nullable
 	protected String resolveId() throws JspException {
 		Object id = evaluate("id", getId());
 		if (id != null) {
@@ -139,10 +148,8 @@ public abstract class AbstractDataBoundFormElementTag extends AbstractFormTag im
 	 * <p>The default implementation simply delegates to {@link #getName()},
 	 * deleting invalid characters (such as "[" or "]").
 	 */
-	@Nullable
 	protected String autogenerateId() throws JspException {
-		String name = getName();
-		return (name != null ? StringUtils.deleteAny(name, "[]") : null);
+		return StringUtils.deleteAny(getName(), "[]");
 	}
 
 	/**
@@ -154,7 +161,6 @@ public abstract class AbstractDataBoundFormElementTag extends AbstractFormTag im
 	 * the value of the '{@code name}' attribute without changing the bind path.
 	 * @return the value for the HTML '{@code name}' attribute
 	 */
-	@Nullable
 	protected String getName() throws JspException {
 		return getPropertyPath();
 	}
@@ -205,7 +211,6 @@ public abstract class AbstractDataBoundFormElementTag extends AbstractFormTag im
 	/**
 	 * Get the {@link PropertyEditor}, if any, in use for value bound to this tag.
 	 */
-	@Nullable
 	protected PropertyEditor getPropertyEditor() throws JspException {
 		return getBindStatus().getEditor();
 	}
@@ -214,7 +219,6 @@ public abstract class AbstractDataBoundFormElementTag extends AbstractFormTag im
 	 * Exposes the {@link PropertyEditor} for {@link EditorAwareTag}.
 	 * <p>Use {@link #getPropertyEditor()} for internal rendering purposes.
 	 */
-	@Override
 	public final PropertyEditor getEditor() throws JspException {
 		return getPropertyEditor();
 	}

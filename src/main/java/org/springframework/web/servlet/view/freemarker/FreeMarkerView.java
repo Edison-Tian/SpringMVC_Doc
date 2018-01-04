@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import javax.servlet.GenericServlet;
@@ -41,7 +42,6 @@ import freemarker.ext.servlet.HttpRequestParametersHashModel;
 import freemarker.ext.servlet.HttpSessionHashModel;
 import freemarker.ext.servlet.ServletContextHashModel;
 import freemarker.template.Configuration;
-import freemarker.template.DefaultObjectWrapperBuilder;
 import freemarker.template.ObjectWrapper;
 import freemarker.template.SimpleHash;
 import freemarker.template.Template;
@@ -52,8 +52,6 @@ import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.BeanInitializationException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContextException;
-import org.springframework.lang.Nullable;
-import org.springframework.util.Assert;
 import org.springframework.web.servlet.support.RequestContextUtils;
 import org.springframework.web.servlet.view.AbstractTemplateView;
 
@@ -87,16 +85,12 @@ import org.springframework.web.servlet.view.AbstractTemplateView;
  */
 public class FreeMarkerView extends AbstractTemplateView {
 
-	@Nullable
 	private String encoding;
 
-	@Nullable
 	private Configuration configuration;
 
-	@Nullable
 	private TaglibFactory taglibFactory;
 
-	@Nullable
 	private ServletContextHashModel servletContextHashModel;
 
 
@@ -106,14 +100,13 @@ public class FreeMarkerView extends AbstractTemplateView {
 	 * <p>Specify the encoding in the FreeMarker Configuration rather than per
 	 * template if all your templates share a common encoding.
 	 */
-	public void setEncoding(@Nullable String encoding) {
+	public void setEncoding(String encoding) {
 		this.encoding = encoding;
 	}
 
 	/**
 	 * Return the encoding for the FreeMarker template.
 	 */
-	@Nullable
 	protected String getEncoding() {
 		return this.encoding;
 	}
@@ -127,28 +120,15 @@ public class FreeMarkerView extends AbstractTemplateView {
 	 * in terms of memory and initial CPU usage. In production it is recommended that you use
 	 * a {@link FreeMarkerConfig} which exposes a single shared {@link TaglibFactory}.
 	 */
-	public void setConfiguration(@Nullable Configuration configuration) {
+	public void setConfiguration(Configuration configuration) {
 		this.configuration = configuration;
 	}
 
 	/**
 	 * Return the FreeMarker configuration used by this view.
 	 */
-	@Nullable
 	protected Configuration getConfiguration() {
 		return this.configuration;
-	}
-
-	/**
-	 * Obtain the FreeMarker configuration for actual use.
-	 * @return the FreeMarker configuration (never {@code null})
-	 * @throws IllegalStateException in case of no Configuration object set
-	 * @since 5.0
-	 */
-	protected Configuration obtainConfiguration() {
-		Configuration configuration = getConfiguration();
-		Assert.state(configuration != null, "No Configuration set");
-		return configuration;
 	}
 
 
@@ -191,7 +171,7 @@ public class FreeMarkerView extends AbstractTemplateView {
 	protected FreeMarkerConfig autodetectConfiguration() throws BeansException {
 		try {
 			return BeanFactoryUtils.beanOfTypeIncludingAncestors(
-					obtainApplicationContext(), FreeMarkerConfig.class, true, false);
+					getApplicationContext(), FreeMarkerConfig.class, true, false);
 		}
 		catch (NoSuchBeanDefinitionException ex) {
 			throw new ApplicationContextException(
@@ -207,9 +187,8 @@ public class FreeMarkerView extends AbstractTemplateView {
 	 * @see freemarker.template.Configuration#getObjectWrapper()
 	 */
 	protected ObjectWrapper getObjectWrapper() {
-		ObjectWrapper ow = obtainConfiguration().getObjectWrapper();
-		return (ow != null ? ow :
-				new DefaultObjectWrapperBuilder(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS).build());
+		ObjectWrapper ow = getConfiguration().getObjectWrapper();
+		return (ow != null ? ow : ObjectWrapper.DEFAULT_WRAPPER);
 	}
 
 	/**
@@ -219,27 +198,24 @@ public class FreeMarkerView extends AbstractTemplateView {
 	 */
 	@Override
 	public boolean checkResource(Locale locale) throws Exception {
-		String url = getUrl();
-		Assert.state(url != null, "'url' not set");
-
 		try {
 			// Check that we can get the template, even if we might subsequently get it again.
-			getTemplate(url, locale);
+			getTemplate(getUrl(), locale);
 			return true;
 		}
 		catch (FileNotFoundException ex) {
 			if (logger.isDebugEnabled()) {
-				logger.debug("No FreeMarker view found for URL: " + url);
+				logger.debug("No FreeMarker view found for URL: " + getUrl());
 			}
 			return false;
 		}
 		catch (ParseException ex) {
 			throw new ApplicationContextException(
-					"Failed to parse FreeMarker template for URL [" + url + "]", ex);
+					"Failed to parse FreeMarker template for URL [" +  getUrl() + "]", ex);
 		}
 		catch (IOException ex) {
 			throw new ApplicationContextException(
-					"Could not load FreeMarker template for URL [" + url + "]", ex);
+					"Could not load FreeMarker template for URL [" + getUrl() + "]", ex);
 		}
 	}
 
@@ -355,9 +331,7 @@ public class FreeMarkerView extends AbstractTemplateView {
 	 * @see #getTemplate(String, java.util.Locale)
 	 */
 	protected Template getTemplate(Locale locale) throws IOException {
-		String url = getUrl();
-		Assert.state(url != null, "'url' not set");
-		return getTemplate(url, locale);
+		return getTemplate(getUrl(), locale);
 	}
 
 	/**
@@ -372,8 +346,8 @@ public class FreeMarkerView extends AbstractTemplateView {
 	 */
 	protected Template getTemplate(String name, Locale locale) throws IOException {
 		return (getEncoding() != null ?
-				obtainConfiguration().getTemplate(name, locale, getEncoding()) :
-				obtainConfiguration().getTemplate(name, locale));
+				getConfiguration().getTemplate(name, locale, getEncoding()) :
+				getConfiguration().getTemplate(name, locale));
 	}
 
 	/**
@@ -413,27 +387,20 @@ public class FreeMarkerView extends AbstractTemplateView {
 	 */
 	private class DelegatingServletConfig implements ServletConfig {
 
-		@Override
-		@Nullable
 		public String getServletName() {
 			return FreeMarkerView.this.getBeanName();
 		}
 
-		@Override
-		@Nullable
 		public ServletContext getServletContext() {
 			return FreeMarkerView.this.getServletContext();
 		}
 
-		@Override
-		@Nullable
 		public String getInitParameter(String paramName) {
 			return null;
 		}
 
-		@Override
 		public Enumeration<String> getInitParameterNames() {
-			return Collections.enumeration(Collections.emptySet());
+			return Collections.enumeration(new HashSet<String>());
 		}
 	}
 

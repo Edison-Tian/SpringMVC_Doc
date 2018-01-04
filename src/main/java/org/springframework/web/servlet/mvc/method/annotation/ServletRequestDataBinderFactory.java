@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2011 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.springframework.web.servlet.mvc.method.annotation;
 
 import java.util.List;
 
-import org.springframework.lang.Nullable;
 import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.bind.support.WebBindingInitializer;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -38,9 +37,7 @@ public class ServletRequestDataBinderFactory extends InitBinderDataBinderFactory
 	 * @param binderMethods one or more {@code @InitBinder} methods
 	 * @param initializer provides global data binder initialization
 	 */
-	public ServletRequestDataBinderFactory(@Nullable List<InvocableHandlerMethod> binderMethods,
-			@Nullable WebBindingInitializer initializer) {
-
+	public ServletRequestDataBinderFactory(List<InvocableHandlerMethod> binderMethods, WebBindingInitializer initializer) {
 		super(binderMethods, initializer);
 	}
 
@@ -48,9 +45,7 @@ public class ServletRequestDataBinderFactory extends InitBinderDataBinderFactory
 	 * Returns an instance of {@link ExtendedServletRequestDataBinder}.
 	 */
 	@Override
-	protected ServletRequestDataBinder createBinderInstance(
-			@Nullable Object target, String objectName, NativeWebRequest request) throws Exception  {
-
+	protected ServletRequestDataBinder createBinderInstance(Object target, String objectName, NativeWebRequest request) {
 		return new ExtendedServletRequestDataBinder(target, objectName);
 	}
 

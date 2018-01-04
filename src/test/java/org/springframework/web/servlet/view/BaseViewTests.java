@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,17 +15,18 @@
  */
 
 package org.springframework.web.servlet.view;
-
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.junit.Test;
+import junit.framework.TestCase;
 
 import org.springframework.context.ApplicationContextException;
 import org.springframework.mock.web.test.MockHttpServletRequest;
@@ -34,22 +35,17 @@ import org.springframework.mock.web.test.MockServletContext;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.View;
 
-import static org.junit.Assert.*;
 import static org.mockito.BDDMockito.*;
 
 /**
- * Base tests for {@link AbstractView}.
- *
- * <p>Not called {@code AbstractViewTests} since doing so would cause it
- * to be ignored in the Gradle build.
+ * Tests for AbstractView. Not called AbstractViewTests as
+ * would otherwise be excluded by Ant build script wildcard.
  *
  * @author Rod Johnson
- * @author Sam Brannen
  */
-public class BaseViewTests {
+public class BaseViewTests extends TestCase {
 
-	@Test
-	public void renderWithoutStaticAttributes() throws Exception {
+	public void testRenderWithoutStaticAttributes() throws Exception {
 		WebApplicationContext wac = mock(WebApplicationContext.class);
 		given(wac.getServletContext()).willReturn(new MockServletContext());
 
@@ -61,21 +57,21 @@ public class BaseViewTests {
 		tv.setApplicationContext(wac);
 		tv.setApplicationContext(wac);
 
-		Map<String, Object> model = new HashMap<>();
+		Map<String, Object> model = new HashMap<String, Object>();
 		model.put("foo", "bar");
 		model.put("something", new Object());
 		tv.render(model, request, response);
 
+		// check it contains all
 		checkContainsAll(model, tv.model);
 
-		assertTrue(tv.initialized);
+		assertTrue(tv.inited);
 	}
 
 	/**
 	 * Test attribute passing, NOT CSV parsing.
 	 */
-	@Test
-	public void renderWithStaticAttributesNoCollision() throws Exception {
+	public void testRenderWithStaticAttributesNoCollision() throws Exception {
 		WebApplicationContext wac = mock(WebApplicationContext.class);
 		given(wac.getServletContext()).willReturn(new MockServletContext());
 
@@ -89,77 +85,78 @@ public class BaseViewTests {
 		p.setProperty("something", "else");
 		tv.setAttributes(p);
 
-		Map<String, Object> model = new HashMap<>();
-		model.put("one", new HashMap<>());
-		model.put("two", new Object());
-		tv.render(model, request, response);
-
-		checkContainsAll(model, tv.model);
-		checkContainsAll(p, tv.model);
-
-		assertTrue(tv.initialized);
-	}
-
-	@Test
-	public void pathVarsOverrideStaticAttributes() throws Exception {
-		WebApplicationContext wac = mock(WebApplicationContext.class);
-		given(wac.getServletContext()).willReturn(new MockServletContext());
-
-		HttpServletRequest request = new MockHttpServletRequest();
-		HttpServletResponse response = new MockHttpServletResponse();
-
-		TestView tv = new TestView(wac);
-		tv.setApplicationContext(wac);
-
-		Properties p = new Properties();
-		p.setProperty("one", "bar");
-		p.setProperty("something", "else");
-		tv.setAttributes(p);
-
-		Map<String, Object> pathVars = new HashMap<>();
-		pathVars.put("one", new HashMap<>());
-		pathVars.put("two", new Object());
-		request.setAttribute(View.PATH_VARIABLES, pathVars);
-
-		tv.render(new HashMap<>(), request, response);
-
-		checkContainsAll(pathVars, tv.model);
-
-		assertEquals(3, tv.model.size());
-		assertEquals("else", tv.model.get("something"));
-		assertTrue(tv.initialized);
-	}
-
-	@Test
-	public void dynamicModelOverridesStaticAttributesIfCollision() throws Exception {
-		WebApplicationContext wac = mock(WebApplicationContext.class);
-		given(wac.getServletContext()).willReturn(new MockServletContext());
-
-		HttpServletRequest request = new MockHttpServletRequest();
-		HttpServletResponse response = new MockHttpServletResponse();
-		TestView tv = new TestView(wac);
-
-		tv.setApplicationContext(wac);
-		Properties p = new Properties();
-		p.setProperty("one", "bar");
-		p.setProperty("something", "else");
-		tv.setAttributes(p);
-
-		Map<String, Object> model = new HashMap<>();
-		model.put("one", new HashMap<>());
+		Map<String, Object> model = new HashMap<String, Object>();
+		model.put("one", new HashMap<Object, Object>());
 		model.put("two", new Object());
 		tv.render(model, request, response);
 
 		// Check it contains all
 		checkContainsAll(model, tv.model);
+		checkContainsAll(p, tv.model);
 
-		assertEquals(3, tv.model.size());
-		assertEquals("else", tv.model.get("something"));
-		assertTrue(tv.initialized);
+		assertTrue(tv.inited);
 	}
 
-	@Test
-	public void dynamicModelOverridesPathVariables() throws Exception {
+	public void testPathVarsOverrideStaticAttributes() throws Exception {
+		WebApplicationContext wac = mock(WebApplicationContext.class);
+		given(wac.getServletContext()).willReturn(new MockServletContext());
+
+		HttpServletRequest request = new MockHttpServletRequest();
+		HttpServletResponse response = new MockHttpServletResponse();
+
+		TestView tv = new TestView(wac);
+		tv.setApplicationContext(wac);
+
+		Properties p = new Properties();
+		p.setProperty("one", "bar");
+		p.setProperty("something", "else");
+		tv.setAttributes(p);
+
+		Map<String, Object> pathVars = new HashMap<String, Object>();
+		pathVars.put("one", new HashMap<Object, Object>());
+		pathVars.put("two", new Object());
+		request.setAttribute(View.PATH_VARIABLES, pathVars);
+
+		tv.render(new HashMap<String, Object>(), request, response);
+
+		// Check it contains all
+		checkContainsAll(pathVars, tv.model);
+		assertTrue(tv.model.size() == 3);
+		// will have old something from properties
+		assertTrue(tv.model.get("something").equals("else"));
+
+		assertTrue(tv.inited);
+	}
+
+	public void testDynamicModelOverridesStaticAttributesIfCollision() throws Exception {
+		WebApplicationContext wac = mock(WebApplicationContext.class);
+		given(wac.getServletContext()).willReturn(new MockServletContext());
+
+		HttpServletRequest request = new MockHttpServletRequest();
+		HttpServletResponse response = new MockHttpServletResponse();
+		TestView tv = new TestView(wac);
+
+		tv.setApplicationContext(wac);
+		Properties p = new Properties();
+		p.setProperty("one", "bar");
+		p.setProperty("something", "else");
+		tv.setAttributes(p);
+
+		Map<String, Object> model = new HashMap<String, Object>();
+		model.put("one", new HashMap<Object, Object>());
+		model.put("two", new Object());
+		tv.render(model, request, response);
+
+		// Check it contains all
+		checkContainsAll(model, tv.model);
+		assertTrue(tv.model.size() == 3);
+		// will have old something from properties
+		assertTrue(tv.model.get("something").equals("else"));
+
+		assertTrue(tv.inited);
+	}
+
+	public void testDynamicModelOverridesPathVariables() throws Exception {
 		WebApplicationContext wac = mock(WebApplicationContext.class);
 		given(wac.getServletContext()).willReturn(new MockServletContext());
 
@@ -169,52 +166,51 @@ public class BaseViewTests {
 		MockHttpServletRequest request = new MockHttpServletRequest();
 		MockHttpServletResponse response = new MockHttpServletResponse();
 
-		Map<String, Object> pathVars = new HashMap<>();
+		Map<String, Object> pathVars = new HashMap<String, Object>();
 		pathVars.put("one", "bar");
 		pathVars.put("something", "else");
 		request.setAttribute(View.PATH_VARIABLES, pathVars);
 
-		Map<String, Object> model = new HashMap<>();
-		model.put("one", new HashMap<>());
+		Map<String, Object> model = new HashMap<String, Object>();
+		model.put("one", new HashMap<Object, Object>());
 		model.put("two", new Object());
 
 		tv.render(model, request, response);
 
+		// Check it contains all
 		checkContainsAll(model, tv.model);
 		assertEquals(3, tv.model.size());
-		assertEquals("else", tv.model.get("something"));
-		assertTrue(tv.initialized);
+		// will have old something from path variables
+		assertTrue(tv.model.get("something").equals("else"));
+
+		assertTrue(tv.inited);
 	}
 
-	@Test
-	public void ignoresNullAttributes() {
+	public void testIgnoresNullAttributes() {
 		AbstractView v = new ConcreteView();
 		v.setAttributes(null);
-		assertEquals(0, v.getStaticAttributes().size());
+		assertTrue(v.getStaticAttributes().size() == 0);
 	}
 
 	/**
 	 * Test only the CSV parsing implementation.
 	 */
-	@Test
-	public void attributeCSVParsingIgnoresNull() {
+	public void testAttributeCSVParsingIgnoresNull() {
 		AbstractView v = new ConcreteView();
 		v.setAttributesCSV(null);
-		assertEquals(0, v.getStaticAttributes().size());
+		assertTrue(v.getStaticAttributes().size() == 0);
 	}
 
-	@Test
-	public void attributeCSVParsingIgnoresEmptyString() {
+	public void testAttributeCSVParsingIgnoresEmptyString() {
 		AbstractView v = new ConcreteView();
 		v.setAttributesCSV("");
-		assertEquals(0, v.getStaticAttributes().size());
+		assertTrue(v.getStaticAttributes().size() == 0);
 	}
 
 	/**
 	 * Format is attname0={value1},attname1={value1}
 	 */
-	@Test
-	public void attributeCSVParsingValid() {
+	public void testAttributeCSVParsingValid() {
 		AbstractView v = new ConcreteView();
 		v.setAttributesCSV("foo=[bar],king=[kong]");
 		assertTrue(v.getStaticAttributes().size() == 2);
@@ -222,8 +218,7 @@ public class BaseViewTests {
 		assertTrue(v.getStaticAttributes().get("king").equals("kong"));
 	}
 
-	@Test
-	public void attributeCSVParsingValidWithWeirdCharacters() {
+	public void testAttributeCSVParsingValidWithWeirdCharacters() {
 		AbstractView v = new ConcreteView();
 		String fooval = "owfie   fue&3[][[[2 \n\n \r  \t 8\ufffd3";
 		// Also tests empty value
@@ -234,8 +229,7 @@ public class BaseViewTests {
 		assertTrue(v.getStaticAttributes().get("king").equals(kingval));
 	}
 
-	@Test
-	public void attributeCSVParsingInvalid() {
+	public void testAttributeCSVParsingInvalid() {
 		AbstractView v = new ConcreteView();
 		try {
 			// No equals
@@ -269,28 +263,32 @@ public class BaseViewTests {
 		}
 	}
 
-	@Test
-	public void attributeCSVParsingIgoresTrailingComma() {
+	public void testAttributeCSVParsingIgoresTrailingComma() {
 		AbstractView v = new ConcreteView();
 		v.setAttributesCSV("foo=[de],");
-		assertEquals(1, v.getStaticAttributes().size());
+		assertTrue(v.getStaticAttributes().size() == 1);
 	}
 
 	/**
-	 * Check that all keys in expected have same values in actual.
+	 * Check that all keys in expected have same values in actual
+	 * @param expected
+	 * @param actual
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private void checkContainsAll(Map expected, Map<String, Object> actual) {
-		expected.forEach((k, v) -> assertEquals("Values for model key '" + k
-				+ "' must match", expected.get(k), actual.get(k)));
+		Set<String> keys = expected.keySet();
+		for (Iterator<String> iter = keys.iterator(); iter.hasNext();) {
+			String key = iter.next();
+			//System.out.println("Checking model key " + key);
+			assertTrue("Value for model key '" + key + "' must match", actual.get(key) == expected.get(key));
+		}
 	}
-
 
 	/**
 	 * Trivial concrete subclass we can use when we're interested only
 	 * in CSV parsing, which doesn't require lifecycle management
 	 */
-	private static class ConcreteView extends AbstractView {
+	private class ConcreteView extends AbstractView {
 		// Do-nothing concrete subclass
 		@Override
 		protected void renderMergedOutputModel(Map<String, Object> model, HttpServletRequest request, HttpServletResponse response)
@@ -299,40 +297,38 @@ public class BaseViewTests {
 		}
 	}
 
-
 	/**
-	 * Single threaded subclass of AbstractView to check superclass behavior.
+	 * Single threaded subclass of AbstractView to check superclass
+	 * behaviour
 	 */
-	private static class TestView extends AbstractView {
-
-		private final WebApplicationContext wac;
-
-		boolean initialized;
+	private class TestView extends AbstractView {
+		private WebApplicationContext wac;
+		public boolean inited;
 
 		/** Captured model in render */
-		Map<String, Object> model;
+		public Map<String, Object> model;
 
-		TestView(WebApplicationContext wac) {
+		public TestView(WebApplicationContext wac) {
 			this.wac = wac;
-		}
 
+		}
 		@Override
-		protected void renderMergedOutputModel(Map<String, Object> model, HttpServletRequest request,
-				HttpServletResponse response) throws ServletException, IOException {
-			this.model = model;
-		}
-
+		protected void renderMergedOutputModel(Map<String, Object> model, HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+				// do nothing
+				this.model = model;
+			}
 		/**
 		 * @see org.springframework.context.support.ApplicationObjectSupport#initApplicationContext()
 		 */
 		@Override
 		protected void initApplicationContext() throws ApplicationContextException {
-			if (initialized) {
+			if (inited)
 				throw new RuntimeException("Already initialized");
-			}
-			this.initialized = true;
+			this.inited = true;
 			assertTrue(getApplicationContext() == wac);
 		}
+
 	}
 
 }

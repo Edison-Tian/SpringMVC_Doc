@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2015 the original author or authors.
+ * Copyright 2002-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,160 +16,124 @@
 
 package org.springframework.web.servlet.support;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
 import org.junit.Before;
 import org.junit.Test;
-
-import org.springframework.http.HttpRequest;
-import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.mock.web.test.MockHttpServletRequest;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.util.UriComponents;
-import org.springframework.web.util.UriComponentsBuilder;
+
+import static org.junit.Assert.*;
 
 /**
- * Unit tests for
- * {@link org.springframework.web.servlet.support.ServletUriComponentsBuilder}.
- *
  * @author Rossen Stoyanchev
  */
 public class ServletUriComponentsBuilderTests {
 
 	private MockHttpServletRequest request;
 
-
 	@Before
 	public void setup() {
 		this.request = new MockHttpServletRequest();
 		this.request.setScheme("http");
 		this.request.setServerName("localhost");
-		this.request.setServerPort(-1);
-		this.request.setRequestURI("/mvc-showcase");
+		this.request.setServerPort(80);
 		this.request.setContextPath("/mvc-showcase");
 	}
 
-
 	@Test
 	public void fromRequest() {
-		this.request.setRequestURI("/mvc-showcase/data/param");
-		this.request.setQueryString("foo=123");
-		String result = ServletUriComponentsBuilder.fromRequest(this.request).build().toUriString();
+		request.setRequestURI("/mvc-showcase/data/param");
+		request.setQueryString("foo=123");
+		String result = ServletUriComponentsBuilder.fromRequest(request).build().toUriString();
+
 		assertEquals("http://localhost/mvc-showcase/data/param?foo=123", result);
 	}
 
 	@Test
 	public void fromRequestEncodedPath() {
-		this.request.setRequestURI("/mvc-showcase/data/foo%20bar");
-		String result = ServletUriComponentsBuilder.fromRequest(this.request).build().toUriString();
+		request.setRequestURI("/mvc-showcase/data/foo%20bar");
+		String result = ServletUriComponentsBuilder.fromRequest(request).build().toUriString();
+
 		assertEquals("http://localhost/mvc-showcase/data/foo%20bar", result);
 	}
 
 	@Test
 	public void fromRequestAtypicalHttpPort() {
-		this.request.setServerPort(8080);
-		String result = ServletUriComponentsBuilder.fromRequest(this.request).build().toUriString();
-		assertEquals("http://localhost:8080/mvc-showcase", result);
+		request.setServerPort(8080);
+		String result = ServletUriComponentsBuilder.fromRequest(request).build().toUriString();
+
+		assertEquals("http://localhost:8080", result);
 	}
 
 	@Test
 	public void fromRequestAtypicalHttpsPort() {
-		this.request.setScheme("https");
-		this.request.setServerPort(9043);
-		String result = ServletUriComponentsBuilder.fromRequest(this.request).build().toUriString();
-		assertEquals("https://localhost:9043/mvc-showcase", result);
-	}
+		request.setScheme("https");
+		request.setServerPort(9043);
+		String result = ServletUriComponentsBuilder.fromRequest(request).build().toUriString();
 
-	// Most X-Forwarded-* tests in UriComponentsBuilderTests
-
-	@Test
-	public void fromRequestWithForwardedHostAndPort() {
-		MockHttpServletRequest request = new MockHttpServletRequest();
-		request.setScheme("http");
-		request.setServerName("localhost");
-		request.setServerPort(80);
-		request.setRequestURI("/mvc-showcase");
-		request.addHeader("X-Forwarded-Proto", "https");
-		request.addHeader("X-Forwarded-Host", "84.198.58.199");
-		request.addHeader("X-Forwarded-Port", "443");
-
-		HttpRequest httpRequest = new ServletServerHttpRequest(request);
-		UriComponents result = UriComponentsBuilder.fromHttpRequest(httpRequest).build();
-
-		assertEquals("https://84.198.58.199/mvc-showcase", result.toString());
+		assertEquals("https://localhost:9043", result);
 	}
 
 	@Test
 	public void fromRequestUri() {
-		this.request.setRequestURI("/mvc-showcase/data/param");
-		this.request.setQueryString("foo=123");
-		String result = ServletUriComponentsBuilder.fromRequestUri(this.request).build().toUriString();
+		request.setRequestURI("/mvc-showcase/data/param");
+		request.setQueryString("foo=123");
+		String result = ServletUriComponentsBuilder.fromRequestUri(request).build().toUriString();
+
 		assertEquals("http://localhost/mvc-showcase/data/param", result);
 	}
 
 	@Test
-	public void fromRequestWithForwardedPrefix() {
-		this.request.setRequestURI("/bar");
-		this.request.addHeader("X-Forwarded-Prefix", "/foo");
-		UriComponents result = ServletUriComponentsBuilder.fromRequest(this.request).build();
+	public void fromRequestWithForwardedHostHeader() {
+		request.addHeader("X-Forwarded-Host", "anotherHost");
+		request.setRequestURI("/mvc-showcase/data/param");
+		request.setQueryString("foo=123");
+		String result = ServletUriComponentsBuilder.fromRequest(request).build().toUriString();
 
-		assertEquals("http://localhost/foo/bar", result.toUriString());
+		assertEquals("http://anotherHost/mvc-showcase/data/param?foo=123", result);
 	}
 
-	@Test
-	public void fromRequestWithForwardedPrefixTrailingSlash() {
-		this.request.setRequestURI("/bar");
-		this.request.addHeader("X-Forwarded-Prefix", "/foo/");
-		UriComponents result = ServletUriComponentsBuilder.fromRequest(this.request).build();
+	// SPR-10701
 
-		assertEquals("http://localhost/foo/bar", result.toUriString());
+	@Test
+	public void fromRequestWithForwardedHostAndPortHeader() {
+		request.addHeader("X-Forwarded-Host", "webtest.foo.bar.com:443");
+		request.setRequestURI("/mvc-showcase/data/param");
+		request.setQueryString("foo=123");
+		UriComponents result = ServletUriComponentsBuilder.fromRequest(request).build();
+
+		assertEquals("webtest.foo.bar.com", result.getHost());
+		assertEquals(443, result.getPort());
 	}
 
 	@Test
 	public void fromContextPath() {
-		this.request.setRequestURI("/mvc-showcase/data/param");
-		this.request.setQueryString("foo=123");
-		String result = ServletUriComponentsBuilder.fromContextPath(this.request).build().toUriString();
+		request.setRequestURI("/mvc-showcase/data/param");
+		request.setQueryString("foo=123");
+		String result = ServletUriComponentsBuilder.fromContextPath(request).build().toUriString();
+
 		assertEquals("http://localhost/mvc-showcase", result);
 	}
 
 	@Test
-	public void fromContextPathWithForwardedPrefix() {
-		this.request.addHeader("X-Forwarded-Prefix", "/prefix");
-		this.request.setContextPath("/mvc-showcase");
-		this.request.setRequestURI("/mvc-showcase/simple");
-		String result = ServletUriComponentsBuilder.fromContextPath(this.request).build().toUriString();
-		assertEquals("http://localhost/prefix/mvc-showcase", result);
-	}
-
-	@Test
 	public void fromServletMapping() {
-		this.request.setRequestURI("/mvc-showcase/app/simple");
-		this.request.setServletPath("/app");
-		this.request.setQueryString("foo=123");
-		String result = ServletUriComponentsBuilder.fromServletMapping(this.request).build().toUriString();
+		request.setRequestURI("/mvc-showcase/app/simple");
+		request.setServletPath("/app");
+		request.setQueryString("foo=123");
+		String result = ServletUriComponentsBuilder.fromServletMapping(request).build().toUriString();
+
 		assertEquals("http://localhost/mvc-showcase/app", result);
 	}
 
 	@Test
-	public void fromServletMappingWithForwardedPrefix() {
-		this.request.addHeader("X-Forwarded-Prefix", "/prefix");
-		this.request.setContextPath("/mvc-showcase");
-		this.request.setServletPath("/app");
-		this.request.setRequestURI("/mvc-showcase/app/simple");
-		String result = ServletUriComponentsBuilder.fromServletMapping(this.request).build().toUriString();
-		assertEquals("http://localhost/prefix/mvc-showcase/app", result);
-	}
-
-	@Test
 	public void fromCurrentRequest() {
-		this.request.setRequestURI("/mvc-showcase/data/param");
-		this.request.setQueryString("foo=123");
+		request.setRequestURI("/mvc-showcase/data/param");
+		request.setQueryString("foo=123");
 		RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(this.request));
 		try {
 			String result = ServletUriComponentsBuilder.fromCurrentRequest().build().toUriString();
+
 			assertEquals("http://localhost/mvc-showcase/data/param?foo=123", result);
 		}
 		finally {
@@ -177,21 +141,4 @@ public class ServletUriComponentsBuilderTests {
 		}
 	}
 
-	// SPR-10272
-
-	@Test
-	public void pathExtension() {
-		this.request.setRequestURI("/rest/books/6.json");
-		ServletUriComponentsBuilder builder = ServletUriComponentsBuilder.fromRequestUri(this.request);
-		String extension = builder.removePathExtension();
-		String result = builder.path("/pages/1.{ext}").buildAndExpand(extension).toUriString();
-		assertEquals("http://localhost/rest/books/6/pages/1.json", result);
-	}
-
-	@Test
-	public void pathExtensionNone() {
-		this.request.setRequestURI("/rest/books/6");
-		ServletUriComponentsBuilder builder = ServletUriComponentsBuilder.fromRequestUri(this.request);
-		assertNull(builder.removePathExtension());
-	}
 }

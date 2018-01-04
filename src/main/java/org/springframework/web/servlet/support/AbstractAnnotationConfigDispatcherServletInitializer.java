@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2016 the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,25 +16,22 @@
 
 package org.springframework.web.servlet.support;
 
-import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 
 /**
- * Base class for {@link org.springframework.web.WebApplicationInitializer}
- * implementations that register a
- * {@link org.springframework.web.servlet.DispatcherServlet DispatcherServlet}
- * configured with annotated classes, e.g. Spring's
- * {@link org.springframework.context.annotation.Configuration @Configuration} classes.
+ * Base class for {@link org.springframework.web.WebApplicationInitializer
+ * WebApplicationInitializer} implementations that register a {@link
+ * org.springframework.web.servlet.DispatcherServlet DispatcherServlet}
+ * configured with annotated classes, e.g. Spring's {@link
+ * org.springframework.context.annotation.Configuration @Configuration} classes.
  *
- * <p>Concrete implementations are required to implement {@link #getRootConfigClasses()}
- * and {@link #getServletConfigClasses()} as well as {@link #getServletMappings()}.
- * Further template and customization methods are provided by
- * {@link AbstractDispatcherServletInitializer}.
- *
- * <p>This is the preferred approach for applications that use Java-based
- * Spring configuration.
+ * <p>Concrete implementations are required to implement {@link #getRootConfigClasses()},
+ * {@link #getServletConfigClasses()}, as well as {@link #getServletMappings()}. Further
+ * template and customization methods are provided by {@link
+ * AbstractDispatcherServletInitializer}.
  *
  * @author Arjen Poutsma
  * @author Chris Beams
@@ -50,12 +47,12 @@ public abstract class AbstractAnnotationConfigDispatcherServletInitializer
 	 * Returns {@code null} if {@link #getRootConfigClasses()} returns {@code null}.
 	 */
 	@Override
-	@Nullable
 	protected WebApplicationContext createRootApplicationContext() {
-		Class<?>[] configClasses = getRootConfigClasses();
-		if (!ObjectUtils.isEmpty(configClasses)) {
-			AnnotationConfigWebApplicationContext rootAppContext = new AnnotationConfigWebApplicationContext();
-			rootAppContext.register(configClasses);
+		Class<?>[] rootConfigClasses = this.getRootConfigClasses();
+		if (!ObjectUtils.isEmpty(rootConfigClasses)) {
+			AnnotationConfigWebApplicationContext rootAppContext =
+					new AnnotationConfigWebApplicationContext();
+			rootAppContext.register(rootConfigClasses);
 			return rootAppContext;
 		}
 		else {
@@ -67,14 +64,18 @@ public abstract class AbstractAnnotationConfigDispatcherServletInitializer
 	 * {@inheritDoc}
 	 * <p>This implementation creates an {@link AnnotationConfigWebApplicationContext},
 	 * providing it the annotated classes returned by {@link #getServletConfigClasses()}.
+	 * @throws IllegalArgumentException if {@link #getServletConfigClasses()} returns
+	 * empty or {@code null}
 	 */
 	@Override
 	protected WebApplicationContext createServletApplicationContext() {
-		AnnotationConfigWebApplicationContext servletAppContext = new AnnotationConfigWebApplicationContext();
-		Class<?>[] configClasses = getServletConfigClasses();
-		if (!ObjectUtils.isEmpty(configClasses)) {
-			servletAppContext.register(configClasses);
-		}
+		AnnotationConfigWebApplicationContext servletAppContext =
+				new AnnotationConfigWebApplicationContext();
+		Class<?>[] servletConfigClasses = this.getServletConfigClasses();
+		Assert.notEmpty(servletConfigClasses,
+				"getServletConfigClasses() did not return any configuration classes");
+
+		servletAppContext.register(servletConfigClasses);
 		return servletAppContext;
 	}
 
@@ -85,7 +86,6 @@ public abstract class AbstractAnnotationConfigDispatcherServletInitializer
 	 * @return the configuration classes for the root application context, or {@code null}
 	 * if creation and registration of a root context is not desired
 	 */
-	@Nullable
 	protected abstract Class<?>[] getRootConfigClasses();
 
 	/**
@@ -93,10 +93,9 @@ public abstract class AbstractAnnotationConfigDispatcherServletInitializer
 	 * and/or {@link org.springframework.stereotype.Component @Component} classes to be
 	 * provided to the {@linkplain #createServletApplicationContext() dispatcher servlet
 	 * application context}.
-	 * @return the configuration classes for the dispatcher servlet application context or
-	 * {@code null} if all configuration is specified through root config classes.
+	 * @return the configuration classes for the dispatcher servlet application context
+	 * (may not be empty or {@code null}).
 	 */
-	@Nullable
 	protected abstract Class<?>[] getServletConfigClasses();
 
 }

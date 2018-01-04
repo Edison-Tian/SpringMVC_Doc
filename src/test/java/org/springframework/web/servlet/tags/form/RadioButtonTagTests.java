@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2015 the original author or authors.
+ * Copyright 2002-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package org.springframework.web.servlet.tags.form;
 import java.beans.PropertyEditorSupport;
 import java.io.StringReader;
 import java.util.Collections;
+
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.Tag;
 
@@ -26,14 +27,10 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
-import org.junit.Test;
-
 import org.springframework.tests.sample.beans.Pet;
 import org.springframework.tests.sample.beans.TestBean;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
-
-import static org.junit.Assert.*;
 
 /**
  * @author Rob Harrop
@@ -58,8 +55,7 @@ public class RadioButtonTagTests extends AbstractFormTagTests {
 		this.tag.setPageContext(getPageContext());
 	}
 
-	@Test
-	public void withCheckedValue() throws Exception {
+	public void testWithCheckedValue() throws Exception {
 		String dynamicAttribute1 = "attr1";
 		String dynamicAttribute2 = "attr2";
 
@@ -82,8 +78,7 @@ public class RadioButtonTagTests extends AbstractFormTagTests {
 		assertContainsAttribute(output, dynamicAttribute2, dynamicAttribute2);
 	}
 
-	@Test
-	public void withCheckedValueAndDynamicAttributes() throws Exception {
+	public void testWithCheckedValueAndDynamicAttributes() throws Exception {
 		this.tag.setPath("sex");
 		this.tag.setValue("M");
 		int result = this.tag.doStartTag();
@@ -98,8 +93,7 @@ public class RadioButtonTagTests extends AbstractFormTagTests {
 		assertContainsAttribute(output, "checked", "checked");
 	}
 
-	@Test
-	public void withCheckedObjectValue() throws Exception {
+	public void testWithCheckedObjectValue() throws Exception {
 		this.tag.setPath("myFloat");
 		this.tag.setValue(getFloat());
 		int result = this.tag.doStartTag();
@@ -114,8 +108,7 @@ public class RadioButtonTagTests extends AbstractFormTagTests {
 		assertContainsAttribute(output, "checked", "checked");
 	}
 
-	@Test
-	public void withCheckedObjectValueAndEditor() throws Exception {
+	public void testWithCheckedObjectValueAndEditor() throws Exception {
 		this.tag.setPath("myFloat");
 		this.tag.setValue("F12.99");
 
@@ -136,8 +129,7 @@ public class RadioButtonTagTests extends AbstractFormTagTests {
 		assertContainsAttribute(output, "checked", "checked");
 	}
 
-	@Test
-	public void withUncheckedObjectValue() throws Exception {
+	public void testWithUncheckedObjectValue() throws Exception {
 		Float value = new Float("99.45");
 		this.tag.setPath("myFloat");
 		this.tag.setValue(value);
@@ -153,8 +145,7 @@ public class RadioButtonTagTests extends AbstractFormTagTests {
 		assertAttributeNotPresent(output, "checked");
 	}
 
-	@Test
-	public void withUncheckedValue() throws Exception {
+	public void testWithUncheckedValue() throws Exception {
 		this.tag.setPath("sex");
 		this.tag.setValue("F");
 		int result = this.tag.doStartTag();
@@ -169,8 +160,7 @@ public class RadioButtonTagTests extends AbstractFormTagTests {
 		assertAttributeNotPresent(output, "checked");
 	}
 
-	@Test
-	public void collectionOfPets() throws Exception {
+	public void testCollectionOfPets() throws Exception {
 		this.tag.setPath("pets");
 		this.tag.setValue(new Pet("Rudiger"));
 
@@ -192,8 +182,7 @@ public class RadioButtonTagTests extends AbstractFormTagTests {
 		assertEquals("checked", checkboxElement.attribute("checked").getValue());
 	}
 
-	@Test
-	public void collectionOfPetsNotSelected() throws Exception {
+	public void testCollectionOfPetsNotSelected() throws Exception {
 		this.tag.setPath("pets");
 		this.tag.setValue(new Pet("Santa's Little Helper"));
 
@@ -215,8 +204,7 @@ public class RadioButtonTagTests extends AbstractFormTagTests {
 		assertNull(checkboxElement.attribute("checked"));
 	}
 
-	@Test
-	public void collectionOfPetsWithEditor() throws Exception {
+	public void testCollectionOfPetsWithEditor() throws Exception {
 		this.tag.setPath("pets");
 		this.tag.setValue(new ItemPet("Rudiger"));
 
@@ -243,8 +231,7 @@ public class RadioButtonTagTests extends AbstractFormTagTests {
 		assertEquals("checked", checkboxElement.attribute("checked").getValue());
 	}
 
-	@Test
-	public void dynamicTypeAttribute() throws JspException {
+	public void testDynamicTypeAttribute() throws JspException {
 		try {
 			this.tag.setDynamicAttribute(null, "type", "email");
 			fail("Expected exception");

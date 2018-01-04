@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ package org.springframework.web.servlet.view;
 import java.util.Locale;
 
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.lang.Nullable;
 
 /**
  * Abstract base class for URL-based views. Provides a consistent way of
@@ -30,7 +29,6 @@ import org.springframework.lang.Nullable;
  */
 public abstract class AbstractUrlBasedView extends AbstractView implements InitializingBean {
 
-	@Nullable
 	private String url;
 
 
@@ -53,19 +51,17 @@ public abstract class AbstractUrlBasedView extends AbstractView implements Initi
 	 * Set the URL of the resource that this view wraps.
 	 * The URL must be appropriate for the concrete View implementation.
 	 */
-	public void setUrl(@Nullable String url) {
+	public void setUrl(String url) {
 		this.url = url;
 	}
 
 	/**
 	 * Return the URL of the resource that this view wraps.
 	 */
-	@Nullable
 	public String getUrl() {
 		return this.url;
 	}
 
-	@Override
 	public void afterPropertiesSet() throws Exception {
 		if (isUrlRequired() && getUrl() == null) {
 			throw new IllegalArgumentException("Property 'url' is required");
@@ -95,7 +91,9 @@ public abstract class AbstractUrlBasedView extends AbstractView implements Initi
 
 	@Override
 	public String toString() {
-		return super.toString() + "; URL [" + getUrl() + "]";
+		StringBuilder sb = new StringBuilder(super.toString());
+		sb.append("; URL [").append(getUrl()).append("]");
+		return sb.toString();
 	}
 
 }

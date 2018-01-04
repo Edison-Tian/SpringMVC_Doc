@@ -1,10 +1,9 @@
 package org.springframework.web.util;
 
-import org.junit.Test;
-
-import org.springframework.core.NestedExceptionUtils;
-
 import static org.junit.Assert.*;
+
+import org.junit.Test;
+import org.springframework.core.NestedExceptionUtils;
 
 public class NestedServletExceptionTests {
 

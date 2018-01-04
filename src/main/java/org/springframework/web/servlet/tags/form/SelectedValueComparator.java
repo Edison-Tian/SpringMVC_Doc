@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2016 the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.core.enums.LabeledEnum;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.servlet.support.BindStatus;
@@ -38,6 +39,10 @@ import org.springframework.web.servlet.support.BindStatus;
  * {@link Object#equals} returns {@code false} then an attempt is made at an
  * {@link #exhaustiveCompare exhaustive comparison} with the aim being to <strong>prove</strong> equality rather
  * than disprove it.
+ *
+ * <p>Special support is given for instances of {@link LabeledEnum} with a {@code String}-based
+ * comparison of the candidate value against the code of the {@link LabeledEnum}. This can be useful when a
+ * {@link LabeledEnum} is used to define a list of '{@code &lt;option&gt;}' elements in HTML.
  *
  * <p>Next, an attempt is made to compare the {@code String} representations of both the candidate and bound
  * values. This may result in {@code true} in a number of cases due to the fact both values will be represented
@@ -89,10 +94,10 @@ abstract class SelectedValueComparator {
 			selected = collectionCompare(CollectionUtils.arrayToList(boundValue), candidateValue, bindStatus);
 		}
 		else if (boundValue instanceof Collection) {
-			selected = collectionCompare((Collection<?>) boundValue, candidateValue, bindStatus);
+			selected = collectionCompare((Collection) boundValue, candidateValue, bindStatus);
 		}
 		else if (boundValue instanceof Map) {
-			selected = mapCompare((Map<?, ?>) boundValue, candidateValue, bindStatus);
+			selected = mapCompare((Map) boundValue, candidateValue, bindStatus);
 		}
 		if (!selected) {
 			selected = exhaustiveCompare(boundValue, candidateValue, bindStatus.getEditor(), null);
@@ -100,7 +105,7 @@ abstract class SelectedValueComparator {
 		return selected;
 	}
 
-	private static boolean collectionCompare(Collection<?> boundCollection, Object candidateValue, BindStatus bindStatus) {
+	private static boolean collectionCompare(Collection boundCollection, Object candidateValue, BindStatus bindStatus) {
 		try {
 			if (boundCollection.contains(candidateValue)) {
 				return true;
@@ -112,7 +117,7 @@ abstract class SelectedValueComparator {
 		return exhaustiveCollectionCompare(boundCollection, candidateValue, bindStatus);
 	}
 
-	private static boolean mapCompare(Map<?, ?> boundMap, Object candidateValue, BindStatus bindStatus) {
+	private static boolean mapCompare(Map boundMap, Object candidateValue, BindStatus bindStatus) {
 		try {
 			if (boundMap.containsKey(candidateValue)) {
 				return true;
@@ -125,9 +130,9 @@ abstract class SelectedValueComparator {
 	}
 
 	private static boolean exhaustiveCollectionCompare(
-			Collection<?> collection, Object candidateValue, BindStatus bindStatus) {
+			Collection collection, Object candidateValue, BindStatus bindStatus) {
 
-		Map<PropertyEditor, Object> convertedValueCache = new HashMap<>(1);
+		Map<PropertyEditor, Object> convertedValueCache = new HashMap<PropertyEditor, Object>(1);
 		PropertyEditor editor = null;
 		boolean candidateIsString = (candidateValue instanceof String);
 		if (!candidateIsString) {
@@ -148,8 +153,19 @@ abstract class SelectedValueComparator {
 			PropertyEditor editor, Map<PropertyEditor, Object> convertedValueCache) {
 
 		String candidateDisplayString = ValueFormatter.getDisplayString(candidate, editor, false);
-		if (boundValue != null && boundValue.getClass().isEnum()) {
-			Enum<?> boundEnum = (Enum<?>) boundValue;
+		if (boundValue instanceof LabeledEnum) {
+			LabeledEnum labeledEnum = (LabeledEnum) boundValue;
+			String enumCodeAsString = ObjectUtils.getDisplayString(labeledEnum.getCode());
+			if (enumCodeAsString.equals(candidateDisplayString)) {
+				return true;
+			}
+			String enumLabelAsString = ObjectUtils.getDisplayString(labeledEnum.getLabel());
+			if (enumLabelAsString.equals(candidateDisplayString)) {
+				return true;
+			}
+		}
+		else if (boundValue.getClass().isEnum()) {
+			Enum boundEnum = (Enum) boundValue;
 			String enumCodeAsString = ObjectUtils.getDisplayString(boundEnum.name());
 			if (enumCodeAsString.equals(candidateDisplayString)) {
 				return true;

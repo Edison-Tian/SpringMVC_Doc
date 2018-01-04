@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,10 @@
 
 package org.springframework.web.servlet.config.annotation;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -23,10 +27,6 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
-
-import org.springframework.core.Ordered;
-import org.springframework.lang.Nullable;
 import org.springframework.mock.web.test.MockHttpServletRequest;
 import org.springframework.mock.web.test.MockHttpServletResponse;
 import org.springframework.ui.ModelMap;
@@ -40,17 +40,11 @@ import org.springframework.web.servlet.handler.WebRequestHandlerInterceptorAdapt
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
 import org.springframework.web.servlet.theme.ThemeChangeInterceptor;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 /**
  * Test fixture with a {@link InterceptorRegistry}, two {@link HandlerInterceptor}s and two
  * {@link WebRequestInterceptor}s.
  *
  * @author Rossen Stoyanchev
- * @author Eko Kurniawan Khannedy
  */
 public class InterceptorRegistryTests {
 
@@ -60,124 +54,106 @@ public class InterceptorRegistryTests {
 
 	private final HandlerInterceptor interceptor2 = new ThemeChangeInterceptor();
 
-	private TestWebRequestInterceptor webInterceptor1;
+	private TestWebRequestInterceptor webRequestInterceptor1;
 
-	private TestWebRequestInterceptor webInterceptor2;
+	private TestWebRequestInterceptor webRequestInterceptor2;
 
 	private final MockHttpServletRequest request = new MockHttpServletRequest();
 
 	private final MockHttpServletResponse response = new MockHttpServletResponse();
 
-
 	@Before
 	public void setUp() {
-		this.registry = new InterceptorRegistry();
-		this.webInterceptor1 = new TestWebRequestInterceptor();
-		this.webInterceptor2 = new TestWebRequestInterceptor();
+		registry = new InterceptorRegistry();
+		webRequestInterceptor1 = new TestWebRequestInterceptor();
+		webRequestInterceptor2 = new TestWebRequestInterceptor();
 	}
 
 	@Test
 	public void addInterceptor() {
-		this.registry.addInterceptor(this.interceptor1);
+		registry.addInterceptor(interceptor1);
 		List<HandlerInterceptor> interceptors = getInterceptorsForPath(null);
-		assertEquals(Arrays.asList(this.interceptor1), interceptors);
+
+		assertEquals(Arrays.asList(interceptor1), interceptors);
 	}
 
 	@Test
 	public void addTwoInterceptors() {
-		this.registry.addInterceptor(this.interceptor1);
-		this.registry.addInterceptor(this.interceptor2);
+		registry.addInterceptor(interceptor1);
+		registry.addInterceptor(interceptor2);
 		List<HandlerInterceptor> interceptors = getInterceptorsForPath(null);
-		assertEquals(Arrays.asList(this.interceptor1, this.interceptor2), interceptors);
+
+		assertEquals(Arrays.asList(interceptor1, interceptor2), interceptors);
 	}
 
 	@Test
 	public void addInterceptorsWithUrlPatterns() {
-		this.registry.addInterceptor(this.interceptor1).addPathPatterns("/path1/**").excludePathPatterns("/path1/secret");
-		this.registry.addInterceptor(this.interceptor2).addPathPatterns("/path2");
+		registry.addInterceptor(interceptor1).addPathPatterns("/path1/**").excludePathPatterns("/path1/secret");
+		registry.addInterceptor(interceptor2).addPathPatterns("/path2");
 
-		assertEquals(Arrays.asList(this.interceptor1), getInterceptorsForPath("/path1/test"));
-		assertEquals(Arrays.asList(this.interceptor2), getInterceptorsForPath("/path2"));
+		assertEquals(Arrays.asList(interceptor1), getInterceptorsForPath("/path1"));
+		assertEquals(Arrays.asList(interceptor2), getInterceptorsForPath("/path2"));
 		assertEquals(Collections.emptyList(), getInterceptorsForPath("/path1/secret"));
 	}
 
 	@Test
 	public void addWebRequestInterceptor() throws Exception {
-		this.registry.addWebRequestInterceptor(this.webInterceptor1);
+		registry.addWebRequestInterceptor(webRequestInterceptor1);
 		List<HandlerInterceptor> interceptors = getInterceptorsForPath(null);
 
 		assertEquals(1, interceptors.size());
-		verifyWebInterceptor(interceptors.get(0), this.webInterceptor1);
+		verifyAdaptedInterceptor(interceptors.get(0), webRequestInterceptor1);
 	}
 
 	@Test
 	public void addWebRequestInterceptors() throws Exception {
-		this.registry.addWebRequestInterceptor(this.webInterceptor1);
-		this.registry.addWebRequestInterceptor(this.webInterceptor2);
+		registry.addWebRequestInterceptor(webRequestInterceptor1);
+		registry.addWebRequestInterceptor(webRequestInterceptor2);
 		List<HandlerInterceptor> interceptors = getInterceptorsForPath(null);
 
 		assertEquals(2, interceptors.size());
-		verifyWebInterceptor(interceptors.get(0), this.webInterceptor1);
-		verifyWebInterceptor(interceptors.get(1), this.webInterceptor2);
-	}
-
-	@Test
-	public void addInterceptorsWithCustomPathMatcher() {
-		PathMatcher pathMatcher = Mockito.mock(PathMatcher.class);
-		this.registry.addInterceptor(interceptor1).addPathPatterns("/path1/**").pathMatcher(pathMatcher);
-
-		MappedInterceptor mappedInterceptor = (MappedInterceptor) this.registry.getInterceptors().get(0);
-		assertSame(pathMatcher, mappedInterceptor.getPathMatcher());
+		verifyAdaptedInterceptor(interceptors.get(0), webRequestInterceptor1);
+		verifyAdaptedInterceptor(interceptors.get(1), webRequestInterceptor2);
 	}
 
 	@Test
 	public void addWebRequestInterceptorsWithUrlPatterns() throws Exception {
-		this.registry.addWebRequestInterceptor(this.webInterceptor1).addPathPatterns("/path1");
-		this.registry.addWebRequestInterceptor(this.webInterceptor2).addPathPatterns("/path2");
+		registry.addWebRequestInterceptor(webRequestInterceptor1).addPathPatterns("/path1");
+		registry.addWebRequestInterceptor(webRequestInterceptor2).addPathPatterns("/path2");
 
 		List<HandlerInterceptor> interceptors = getInterceptorsForPath("/path1");
 		assertEquals(1, interceptors.size());
-		verifyWebInterceptor(interceptors.get(0), this.webInterceptor1);
+		verifyAdaptedInterceptor(interceptors.get(0), webRequestInterceptor1);
 
 		interceptors = getInterceptorsForPath("/path2");
 		assertEquals(1, interceptors.size());
-		verifyWebInterceptor(interceptors.get(0), this.webInterceptor2);
+		verifyAdaptedInterceptor(interceptors.get(0), webRequestInterceptor2);
 	}
-
-	@Test  // SPR-11130
-	public void addInterceptorWithExcludePathPatternOnly() {
-		this.registry.addInterceptor(this.interceptor1).excludePathPatterns("/path1/secret");
-		this.registry.addInterceptor(this.interceptor2).addPathPatterns("/path2");
-
-		assertEquals(Collections.singletonList(this.interceptor1), getInterceptorsForPath("/path1"));
-		assertEquals(Arrays.asList(this.interceptor1, this.interceptor2), getInterceptorsForPath("/path2"));
-		assertEquals(Collections.emptyList(), getInterceptorsForPath("/path1/secret"));
-	}
-
 
 	private List<HandlerInterceptor> getInterceptorsForPath(String lookupPath) {
 		PathMatcher pathMatcher = new AntPathMatcher();
-		List<HandlerInterceptor> result = new ArrayList<>();
-		for (Object interceptor : this.registry.getInterceptors()) {
-			if (interceptor instanceof MappedInterceptor) {
-				MappedInterceptor mappedInterceptor = (MappedInterceptor) interceptor;
+		List<HandlerInterceptor> result = new ArrayList<HandlerInterceptor>();
+		for (Object i : registry.getInterceptors()) {
+			if (i instanceof MappedInterceptor) {
+				MappedInterceptor mappedInterceptor = (MappedInterceptor) i;
 				if (mappedInterceptor.matches(lookupPath, pathMatcher)) {
 					result.add(mappedInterceptor.getInterceptor());
 				}
 			}
-			else if (interceptor instanceof HandlerInterceptor) {
-				result.add((HandlerInterceptor) interceptor);
+			else if (i instanceof HandlerInterceptor){
+				result.add((HandlerInterceptor) i);
 			}
 			else {
-				fail("Unexpected interceptor type: " + interceptor.getClass().getName());
+				fail("Unexpected interceptor type: " + i.getClass().getName());
 			}
 		}
 		return result;
 	}
 
-	private void verifyWebInterceptor(HandlerInterceptor interceptor, TestWebRequestInterceptor webInterceptor) throws Exception {
+	private void verifyAdaptedInterceptor(HandlerInterceptor interceptor, TestWebRequestInterceptor webInterceptor)
+			throws Exception {
 		assertTrue(interceptor instanceof WebRequestHandlerInterceptorAdapter);
-		interceptor.preHandle(this.request, this.response, null);
+		interceptor.preHandle(request, response, null);
 		assertTrue(webInterceptor.preHandleInvoked);
 	}
 
@@ -191,35 +167,13 @@ public class InterceptorRegistryTests {
 		}
 
 		@Override
-		public void postHandle(WebRequest request, @Nullable ModelMap model) throws Exception {
+		public void postHandle(WebRequest request, ModelMap model) throws Exception {
 		}
 
 		@Override
-		public void afterCompletion(WebRequest request, @Nullable Exception ex) throws Exception {
+		public void afterCompletion(WebRequest request, Exception ex) throws Exception {
 		}
+
 	}
 
-	@Test
-	public void orderedInterceptors() throws Exception {
-		this.registry.addInterceptor(this.interceptor1).order(Ordered.LOWEST_PRECEDENCE);
-		this.registry.addInterceptor(this.interceptor2).order(Ordered.HIGHEST_PRECEDENCE);
-
-		List<Object> interceptors = this.registry.getInterceptors();
-		assertEquals(2, interceptors.size());
-
-		assertSame(this.interceptor2, interceptors.get(0));
-		assertSame(this.interceptor1, interceptors.get(1));
-	}
-
-	@Test
-	public void nonOrderedInterceptors() throws Exception {
-		this.registry.addInterceptor(this.interceptor1).order(0);
-		this.registry.addInterceptor(this.interceptor2).order(0);
-
-		List<Object> interceptors = this.registry.getInterceptors();
-		assertEquals(2, interceptors.size());
-
-		assertSame(this.interceptor1, interceptors.get(0));
-		assertSame(this.interceptor2, interceptors.get(1));
-	}
 }

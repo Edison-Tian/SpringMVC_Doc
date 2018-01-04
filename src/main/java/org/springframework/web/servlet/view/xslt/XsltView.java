@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,10 +44,8 @@ import org.w3c.dom.Node;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContextException;
 import org.springframework.core.io.Resource;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.util.xml.SimpleTransformErrorListener;
 import org.springframework.util.xml.TransformerUtils;
@@ -75,28 +73,22 @@ import org.springframework.web.util.WebUtils;
  */
 public class XsltView extends AbstractUrlBasedView {
 
-	@Nullable
-	private Class<? extends TransformerFactory> transformerFactoryClass;
+	private Class transformerFactoryClass;
 
-	@Nullable
 	private String sourceKey;
 
-	@Nullable
 	private URIResolver uriResolver;
 
 	private ErrorListener errorListener = new SimpleTransformErrorListener(logger);
 
 	private boolean indent = true;
 
-	@Nullable
 	private Properties outputProperties;
 
 	private boolean cacheTemplates = true;
 
-	@Nullable
 	private TransformerFactory transformerFactory;
 
-	@Nullable
 	private Templates cachedTemplates;
 
 
@@ -105,7 +97,8 @@ public class XsltView extends AbstractUrlBasedView {
 	 * <p>The default constructor of the specified class will be called
 	 * to build the TransformerFactory for this view.
 	 */
-	public void setTransformerFactoryClass(Class<? extends TransformerFactory> transformerFactoryClass) {
+	public void setTransformerFactoryClass(Class transformerFactoryClass) {
+		Assert.isAssignable(TransformerFactory.class, transformerFactoryClass);
 		this.transformerFactoryClass = transformerFactoryClass;
 	}
 
@@ -139,7 +132,7 @@ public class XsltView extends AbstractUrlBasedView {
 	 * and rethrows errors to discontinue the XML transformation.
 	 * @see org.springframework.util.xml.SimpleTransformErrorListener
 	 */
-	public void setErrorListener(@Nullable ErrorListener errorListener) {
+	public void setErrorListener(ErrorListener errorListener) {
 		this.errorListener = (errorListener != null ? errorListener : new SimpleTransformErrorListener(logger));
 	}
 
@@ -202,10 +195,10 @@ public class XsltView extends AbstractUrlBasedView {
 	 * @see #setTransformerFactoryClass
 	 * @see #getTransformerFactory()
 	 */
-	protected TransformerFactory newTransformerFactory(@Nullable Class<? extends TransformerFactory> transformerFactoryClass) {
+	protected TransformerFactory newTransformerFactory(Class transformerFactoryClass) {
 		if (transformerFactoryClass != null) {
 			try {
-				return ReflectionUtils.accessibleConstructor(transformerFactoryClass).newInstance();
+				return (TransformerFactory) transformerFactoryClass.newInstance();
 			}
 			catch (Exception ex) {
 				throw new TransformerFactoryConfigurationError(ex, "Could not instantiate TransformerFactory");
@@ -221,7 +214,6 @@ public class XsltView extends AbstractUrlBasedView {
 	 * @return the TransformerFactory (never {@code null})
 	 */
 	protected final TransformerFactory getTransformerFactory() {
-		Assert.state(this.transformerFactory != null, "No TransformerFactory available");
 		return this.transformerFactory;
 	}
 
@@ -272,11 +264,10 @@ public class XsltView extends AbstractUrlBasedView {
 	 * an object of {@link #getSourceTypes() supported type}.
 	 * @param model the merged model Map
 	 * @return the XSLT Source object (or {@code null} if none found)
-	 * @throws Exception if an error occurred during locating the source
+	 * @throws Exception if an error occured during locating the source
 	 * @see #setSourceKey
 	 * @see #convertSource
 	 */
-	@Nullable
 	protected Source locateSource(Map<String, Object> model) throws Exception {
 		if (this.sourceKey != null) {
 			return convertSource(model.get(this.sourceKey));
@@ -292,8 +283,8 @@ public class XsltView extends AbstractUrlBasedView {
 	 * {@link Reader}, {@link InputStream} and {@link Resource}.
 	 * @return the supported source types
 	 */
-	protected Class<?>[] getSourceTypes() {
-		return new Class<?>[] {Source.class, Document.class, Node.class, Reader.class, InputStream.class, Resource.class};
+	protected Class[] getSourceTypes() {
+		return new Class[] {Source.class, Document.class, Node.class, Reader.class, InputStream.class, Resource.class};
 	}
 
 	/**
@@ -371,7 +362,7 @@ public class XsltView extends AbstractUrlBasedView {
 	 */
 	protected final void copyOutputProperties(Transformer transformer) {
 		if (this.outputProperties != null) {
-			Enumeration<?> en = this.outputProperties.propertyNames();
+			Enumeration en = this.outputProperties.propertyNames();
 			while (en.hasMoreElements()) {
 				String name = (String) en.nextElement();
 				transformer.setOutputProperty(name, this.outputProperties.getProperty(name));
@@ -387,7 +378,9 @@ public class XsltView extends AbstractUrlBasedView {
 	 * @param transformer the target transformer
 	 */
 	protected final void copyModelParameters(Map<String, Object> model, Transformer transformer) {
-		model.forEach(transformer::setParameter);
+		for (Map.Entry<String, Object> entry : model.entrySet()) {
+			transformer.setParameter(entry.getKey(), entry.getValue());
+		}
 	}
 
 	/**
@@ -423,7 +416,7 @@ public class XsltView extends AbstractUrlBasedView {
 	private Templates loadTemplates() throws ApplicationContextException {
 		Source stylesheetSource = getStylesheetSource();
 		try {
-			Templates templates = getTransformerFactory().newTemplates(stylesheetSource);
+			Templates templates = this.transformerFactory.newTemplates(stylesheetSource);
 			if (logger.isDebugEnabled()) {
 				logger.debug("Loading templates '" + templates + "'");
 			}
@@ -459,13 +452,11 @@ public class XsltView extends AbstractUrlBasedView {
 	 */
 	protected Source getStylesheetSource() {
 		String url = getUrl();
-		Assert.state(url != null, "'url' not set");
-
 		if (logger.isDebugEnabled()) {
 			logger.debug("Loading XSLT stylesheet from '" + url + "'");
 		}
 		try {
-			Resource resource = obtainApplicationContext().getResource(url);
+			Resource resource = getApplicationContext().getResource(url);
 			return new StreamSource(resource.getInputStream(), resource.getURI().toASCIIString());
 		}
 		catch (IOException ex) {
@@ -478,7 +469,7 @@ public class XsltView extends AbstractUrlBasedView {
 	 * <p>Only works for {@link StreamSource StreamSources}.
 	 * @param source the XSLT Source to close (may be {@code null})
 	 */
-	private void closeSourceIfNecessary(@Nullable Source source) {
+	private void closeSourceIfNecessary(Source source) {
 		if (source instanceof StreamSource) {
 			StreamSource streamSource = (StreamSource) source;
 			if (streamSource.getReader() != null) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2014 the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 package org.springframework.web.servlet.tags.form;
 
 import javax.servlet.jsp.JspException;
-
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -57,7 +56,7 @@ public class OptionsTag extends AbstractHtmlElementTag {
 	 */
 	private String itemLabel;
 
-	private boolean disabled;
+	private String disabled;
 
 
 	/**
@@ -85,6 +84,7 @@ public class OptionsTag extends AbstractHtmlElementTag {
 	 * attribute of the '{@code option}' tag.
 	 * <p>Required when wishing to render '{@code option}' tags from
 	 * an array or {@link java.util.Collection}.
+	 * <p>May be a runtime expression.
 	 */
 	public void setItemValue(String itemValue) {
 		Assert.hasText(itemValue, "'itemValue' must not be empty");
@@ -102,6 +102,7 @@ public class OptionsTag extends AbstractHtmlElementTag {
 	/**
 	 * Set the name of the property mapped to the label (inner text) of the
 	 * '{@code option}' tag.
+	 * <p>May be a runtime expression.
 	 */
 	public void setItemLabel(String itemLabel) {
 		Assert.hasText(itemLabel, "'itemLabel' must not be empty");
@@ -111,6 +112,7 @@ public class OptionsTag extends AbstractHtmlElementTag {
 	/**
 	 * Get the name of the property mapped to the label (inner text) of the
 	 * '{@code option}' tag.
+	 * <p>May be a runtime expression.
 	 */
 	protected String getItemLabel() {
 		return this.itemLabel;
@@ -118,16 +120,26 @@ public class OptionsTag extends AbstractHtmlElementTag {
 
 	/**
 	 * Set the value of the '{@code disabled}' attribute.
+	 * <p>May be a runtime expression.
+	 * @param disabled the value of the '{@code disabled}' attribute
 	 */
-	public void setDisabled(boolean disabled) {
+	public void setDisabled(String disabled) {
 		this.disabled = disabled;
 	}
 
 	/**
 	 * Get the value of the '{@code disabled}' attribute.
 	 */
-	protected boolean isDisabled() {
+	protected String getDisabled() {
 		return this.disabled;
+	}
+
+	/**
+	 * Is the current HTML tag disabled?
+	 * @return {@code true} if this tag is disabled
+	 */
+	protected boolean isDisabled() throws JspException {
+		return evaluateBoolean("disabled", getDisabled());
 	}
 
 
@@ -138,8 +150,7 @@ public class OptionsTag extends AbstractHtmlElementTag {
 		Object itemsObject = null;
 		if (items != null) {
 			itemsObject = (items instanceof String ? evaluate("items", items) : items);
-		}
-		else {
+		} else {
 			Class<?> selectTagBoundType = selectTag.getBindStatus().getValueType();
 			if (selectTagBoundType != null && selectTagBoundType.isEnum()) {
 				itemsObject = selectTagBoundType.getEnumConstants();

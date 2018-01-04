@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2013 the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,27 +19,25 @@ package org.springframework.web.servlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.springframework.lang.Nullable;
-
 /**
- * MVC framework SPI, allowing parameterization of the core MVC workflow.
+ * MVC framework SPI interface, allowing parameterization of core MVC workflow.
  *
  * <p>Interface that must be implemented for each handler type to handle a request.
  * This interface is used to allow the {@link DispatcherServlet} to be indefinitely
- * extensible. The {@code DispatcherServlet} accesses all installed handlers through
- * this interface, meaning that it does not contain code specific to any handler type.
+ * extensible. The DispatcherServlet accesses all installed handlers through this
+ * interface, meaning that it does not contain code specific to any handler type.
  *
  * <p>Note that a handler can be of type {@code Object}. This is to enable
  * handlers from other frameworks to be integrated with this framework without
- * custom coding, as well as to allow for annotation-driven handler objects that
- * do not obey any specific Java interface.
+ * custom coding, as well as to allow for annotation handler objects that do
+ * not obey any specific Java interface.
  *
  * <p>This interface is not intended for application developers. It is available
  * to handlers who want to develop their own web workflow.
  *
- * <p>Note: {@code HandlerAdapter} implementors may implement the {@link
- * org.springframework.core.Ordered} interface to be able to specify a sorting
- * order (and thus a priority) for getting applied by the {@code DispatcherServlet}.
+ * <p>Note: HandlerAdaptger implementators may implement the
+ * {@link org.springframework.core.Ordered} interface to be able to specify a
+ * sorting order (and thus a priority) for getting applied by DispatcherServlet.
  * Non-Ordered instances get treated as lowest priority.
  *
  * @author Rod Johnson
@@ -50,8 +48,8 @@ import org.springframework.lang.Nullable;
 public interface HandlerAdapter {
 
 	/**
-	 * Given a handler instance, return whether or not this {@code HandlerAdapter}
-	 * can support it. Typical HandlerAdapters will base the decision on the handler
+	 * Given a handler instance, return whether or not this HandlerAdapter can
+	 * support it. Typical HandlerAdapters will base the decision on the handler
 	 * type. HandlerAdapters will usually only support one handler type each.
 	 * <p>A typical implementation:
 	 * <p>{@code
@@ -74,7 +72,6 @@ public interface HandlerAdapter {
 	 * @return ModelAndView object with the name of the view and the required
 	 * model data, or {@code null} if the request has been handled directly
 	 */
-	@Nullable
 	ModelAndView handle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception;
 
 	/**

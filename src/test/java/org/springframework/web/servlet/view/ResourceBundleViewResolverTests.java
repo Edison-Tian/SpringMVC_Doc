@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2015 the original author or authors.
+ * Copyright 2002-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,7 @@ import java.util.MissingResourceException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.junit.Before;
-import org.junit.Test;
+import junit.framework.TestCase;
 
 import org.springframework.beans.factory.BeanIsAbstractException;
 import org.springframework.core.io.Resource;
@@ -33,32 +32,28 @@ import org.springframework.web.context.support.ServletContextResource;
 import org.springframework.web.context.support.StaticWebApplicationContext;
 import org.springframework.web.servlet.View;
 
-import static org.hamcrest.CoreMatchers.*;
-
-import static org.junit.Assert.*;
-import static org.junit.Assume.*;
-
 /**
  * @author Rod Johnson
  * @author Juergen Hoeller
- * @author Sam Brannen
  */
-public class ResourceBundleViewResolverTests {
+public class ResourceBundleViewResolverTests extends TestCase {
 
 	/** Comes from this package */
 	private static String PROPS_FILE = "org.springframework.web.servlet.view.testviews";
 
-	private final ResourceBundleViewResolver rb = new ResourceBundleViewResolver();
+	private ResourceBundleViewResolver rb;
 
-	private final StaticWebApplicationContext wac = new StaticWebApplicationContext();
+	private StaticWebApplicationContext wac;
 
 
-	@Before
-	public void setUp() throws Exception {
+	@Override
+	protected void setUp() throws Exception {
+		rb = new ResourceBundleViewResolver();
 		rb.setBasename(PROPS_FILE);
 		rb.setCache(getCache());
 		rb.setDefaultParentView("testParent");
 
+		wac = new StaticWebApplicationContext();
 		wac.setServletContext(new MockServletContext());
 		wac.refresh();
 
@@ -75,8 +70,7 @@ public class ResourceBundleViewResolverTests {
 	}
 
 
-	@Test
-	public void parentsAreAbstract() throws Exception {
+	public void testParentsAreAbstract() throws Exception {
 		try {
 			rb.resolveViewName("debug.Parent", Locale.ENGLISH);
 			fail("Should have thrown BeanIsAbstractException");
@@ -93,32 +87,31 @@ public class ResourceBundleViewResolverTests {
 		}
 	}
 
-	@Test
-	public void debugViewEnglish() throws Exception {
+	public void testDebugViewEnglish() throws Exception {
 		View v = rb.resolveViewName("debugView", Locale.ENGLISH);
-		assertThat(v, instanceOf(InternalResourceView.class));
+		assertTrue("debugView must be of type InternalResourceView", v instanceof InternalResourceView);
 		InternalResourceView jv = (InternalResourceView) v;
-		assertEquals("debugView must have correct URL", "jsp/debug/debug.jsp", jv.getUrl());
+		assertTrue("debugView must have correct URL", "jsp/debug/debug.jsp".equals(jv.getUrl()));
 
-		Map<String, Object> m = jv.getStaticAttributes();
-		assertEquals("Must have 2 static attributes", 2, m.size());
-		assertEquals("attribute foo", "bar", m.get("foo"));
-		assertEquals("attribute postcode", "SE10 9JY", m.get("postcode"));
+		Map m = jv.getStaticAttributes();
+		assertTrue("Must have 2 static attributes, not " + m.size(), m.size() == 2);
+		assertTrue("attribute foo = bar, not '" + m.get("foo") + "'", m.get("foo").equals("bar"));
+		assertTrue("attribute postcode = SE10 9JY", m.get("postcode").equals("SE10 9JY"));
 
-		assertEquals("Correct default content type", AbstractView.DEFAULT_CONTENT_TYPE, jv.getContentType());
+		assertTrue("Correct default content type", jv.getContentType().equals(AbstractView.DEFAULT_CONTENT_TYPE));
 	}
 
-	@Test
-	public void debugViewFrench() throws Exception {
+	public void testDebugViewFrench() throws Exception {
 		View v = rb.resolveViewName("debugView", Locale.FRENCH);
-		assertThat(v, instanceOf(InternalResourceView.class));
+		assertTrue("French debugView must be of type InternalResourceView", v instanceof InternalResourceView);
 		InternalResourceView jv = (InternalResourceView) v;
-		assertEquals("French debugView must have correct URL", "jsp/debug/deboug.jsp", jv.getUrl());
-		assertEquals("Correct overridden (XML) content type", "text/xml;charset=ISO-8859-1", jv.getContentType());
+		assertTrue("French debugView must have correct URL", "jsp/debug/deboug.jsp".equals(jv.getUrl()));
+		assertTrue(
+			"Correct overridden (XML) content type, not '" + jv.getContentType() + "'",
+			jv.getContentType().equals("text/xml;charset=ISO-8859-1"));
 	}
 
-	@Test
-	public void eagerInitialization() throws Exception {
+	public void testEagerInitialization() throws Exception {
 		ResourceBundleViewResolver rb = new ResourceBundleViewResolver();
 		rb.setBasename(PROPS_FILE);
 		rb.setCache(getCache());
@@ -127,43 +120,48 @@ public class ResourceBundleViewResolverTests {
 		rb.setApplicationContext(wac);
 
 		View v = rb.resolveViewName("debugView", Locale.FRENCH);
-		assertThat(v, instanceOf(InternalResourceView.class));
+		assertTrue("French debugView must be of type InternalResourceView", v instanceof InternalResourceView);
 		InternalResourceView jv = (InternalResourceView) v;
-		assertEquals("French debugView must have correct URL", "jsp/debug/deboug.jsp", jv.getUrl());
-		assertEquals("Correct overridden (XML) content type", "text/xml;charset=ISO-8859-1", jv.getContentType());
+		assertTrue("French debugView must have correct URL", "jsp/debug/deboug.jsp".equals(jv.getUrl()));
+		assertTrue(
+			"Correct overridden (XML) content type, not '" + jv.getContentType() + "'",
+			jv.getContentType().equals("text/xml;charset=ISO-8859-1"));
 	}
 
-	@Test
-	public void sameBundleOnlyCachedOnce() throws Exception {
-		assumeTrue(rb.isCache());
-
-		View v1 = rb.resolveViewName("debugView", Locale.ENGLISH);
-		View v2 = rb.resolveViewName("debugView", Locale.UK);
-		assertSame(v1, v2);
+	public void testSameBundleOnlyCachedOnce() throws Exception {
+		if (rb.isCache()) {
+			View v1 = rb.resolveViewName("debugView", Locale.ENGLISH);
+			View v2 = rb.resolveViewName("debugView", Locale.UK);
+			assertSame(v1, v2);
+		}
 	}
 
-	@Test
-	public void noSuchViewEnglish() throws Exception {
-		assertNull(rb.resolveViewName("xxxxxxweorqiwuopeir", Locale.ENGLISH));
+	public void testNoSuchViewEnglish() throws Exception {
+		View v = rb.resolveViewName("xxxxxxweorqiwuopeir", Locale.ENGLISH);
+		assertTrue(v == null);
 	}
 
-	@Test
-	public void onSetContextCalledOnce() throws Exception {
+	public void testOnSetContextCalledOnce() throws Exception {
 		TestView tv = (TestView) rb.resolveViewName("test", Locale.ENGLISH);
 		tv = (TestView) rb.resolveViewName("test", Locale.ENGLISH);
 		tv = (TestView) rb.resolveViewName("test", Locale.ENGLISH);
-		assertEquals("test has correct name", "test", tv.getBeanName());
-		assertEquals("test should have been initialized once, not ", 1, tv.initCount);
+		assertTrue("test has correct name", "test".equals(tv.getBeanName()));
+		assertTrue("test should have been initialized once, not " + tv.initCount + " times", tv.initCount == 1);
 	}
 
-	@Test(expected = MissingResourceException.class)
-	public void noSuchBasename() throws Exception {
-		rb.setBasename("weoriwoierqupowiuer");
-		rb.resolveViewName("debugView", Locale.ENGLISH);
+	public void testNoSuchBasename() throws Exception {
+		try {
+			rb.setBasename("weoriwoierqupowiuer");
+			rb.resolveViewName("debugView", Locale.ENGLISH);
+			fail("No such basename: all requests should fail with exception");
+		}
+		catch (MissingResourceException ex) {
+			// OK
+		}
 	}
 
 
-	static class TestView extends AbstractView {
+	public static class TestView extends AbstractView {
 
 		public int initCount;
 
@@ -174,8 +172,7 @@ public class ResourceBundleViewResolverTests {
 		}
 
 		@Override
-		protected void renderMergedOutputModel(Map<String, Object> model, HttpServletRequest request,
-				HttpServletResponse response) {
+		protected void renderMergedOutputModel(Map model, HttpServletRequest request, HttpServletResponse response) {
 		}
 
 		@Override

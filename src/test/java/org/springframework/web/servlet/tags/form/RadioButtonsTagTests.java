@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2016 the original author or authors.
+ * Copyright 2002-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.Tag;
 
@@ -33,17 +34,12 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.Node;
 import org.dom4j.io.SAXReader;
-
-import org.junit.Test;
-
-import org.springframework.beans.propertyeditors.StringTrimmerEditor;
 import org.springframework.tests.sample.beans.Colour;
 import org.springframework.tests.sample.beans.Pet;
 import org.springframework.tests.sample.beans.TestBean;
+import org.springframework.beans.propertyeditors.StringTrimmerEditor;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
-
-import static org.junit.Assert.*;
 
 /**
  * @author Thomas Risberg
@@ -51,8 +47,7 @@ import static org.junit.Assert.*;
  * @author Scott Andrews
  * @author Jeremy Grelle
  */
-@SuppressWarnings({ "rawtypes", "unchecked" })
-public class RadioButtonsTagTests extends AbstractFormTagTests {
+public final class RadioButtonsTagTests extends AbstractFormTagTests {
 
 	private RadioButtonsTag tag;
 
@@ -70,8 +65,7 @@ public class RadioButtonsTagTests extends AbstractFormTagTests {
 		this.tag.setPageContext(getPageContext());
 	}
 
-	@Test
-	public void withMultiValueArray() throws Exception {
+	public void testWithMultiValueArray() throws Exception {
 		this.tag.setPath("stringArray");
 		this.tag.setItems(new Object[] {"foo", "bar", "baz"});
 		int result = this.tag.doStartTag();
@@ -109,8 +103,7 @@ public class RadioButtonsTagTests extends AbstractFormTagTests {
 		assertEquals("baz", spanElement3.getStringValue());
 	}
 
-	@Test
-	public void withMultiValueArrayAndDynamicAttributes() throws Exception {
+	public void testWithMultiValueArrayAndDynamicAttributes() throws Exception {
 		String dynamicAttribute1 = "attr1";
 		String dynamicAttribute2 = "attr2";
 
@@ -163,8 +156,7 @@ public class RadioButtonsTagTests extends AbstractFormTagTests {
 
 	}
 
-	@Test
-	public void withMultiValueArrayWithDelimiter() throws Exception {
+	public void testWithMultiValueArrayWithDelimiter() throws Exception {
 		this.tag.setDelimiter("<br/>");
 		this.tag.setPath("stringArray");
 		this.tag.setItems(new Object[] {"foo", "bar", "baz"});
@@ -209,8 +201,7 @@ public class RadioButtonsTagTests extends AbstractFormTagTests {
 		assertEquals("baz", spanElement3.getStringValue());
 	}
 
-	@Test
-	public void withMultiValueMap() throws Exception {
+	public void testWithMultiValueMap() throws Exception {
 		this.tag.setPath("stringArray");
 		Map m = new LinkedHashMap();
 		m.put("foo", "FOO");
@@ -253,8 +244,7 @@ public class RadioButtonsTagTests extends AbstractFormTagTests {
 		assertEquals("BAZ", spanElement3.getStringValue());
 	}
 
-	@Test
-	public void withMultiValueMapWithDelimiter() throws Exception {
+	public void testWithMultiValueMapWithDelimiter() throws Exception {
 		String delimiter = " | ";
 		this.tag.setDelimiter(delimiter);
 		this.tag.setPath("stringArray");
@@ -299,8 +289,7 @@ public class RadioButtonsTagTests extends AbstractFormTagTests {
 		assertEquals(delimiter + "BAZ", spanElement3.getStringValue());
 	}
 
-	@Test
-	public void withMultiValueWithEditor() throws Exception {
+	public void testWithMultiValueWithEditor() throws Exception {
 		this.tag.setPath("stringArray");
 		this.tag.setItems(new Object[] {"   foo", "   bar", "   baz"});
 		BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(this.bean, COMMAND_NAME);
@@ -342,8 +331,7 @@ public class RadioButtonsTagTests extends AbstractFormTagTests {
 		assertEquals("   baz", radioButtonElement3.attribute("value").getValue());
 	}
 
-	@Test
-	public void collectionOfPets() throws Exception {
+	public void testCollectionOfPets() throws Exception {
 		this.tag.setPath("pets");
 		List allPets = new ArrayList();
 		allPets.add(new ItemPet("Rudiger"));
@@ -407,8 +395,7 @@ public class RadioButtonsTagTests extends AbstractFormTagTests {
 		assertEquals("MUFTY", spanElement5.getStringValue());
 	}
 
-	@Test
-	public void collectionOfPetsWithEditor() throws Exception {
+	public void testCollectionOfPetsWithEditor() throws Exception {
 		this.tag.setPath("pets");
 		List allPets = new ArrayList();
 		allPets.add(new ItemPet("Rudiger"));
@@ -477,8 +464,7 @@ public class RadioButtonsTagTests extends AbstractFormTagTests {
 		assertEquals("MUFTY", spanElement5.getStringValue());
 	}
 
-	@Test
-	public void withoutItemsEnumBindTarget() throws Exception {
+	public void testWithoutItemsEnumBindTarget() throws Exception {
 		BeanWithEnum testBean = new BeanWithEnum();
 		testBean.setTestEnum(TestEnum.VALUE_2);
 		getPageContext().getRequest().setAttribute("testBean", testBean);
@@ -500,8 +486,7 @@ public class RadioButtonsTagTests extends AbstractFormTagTests {
 		assertEquals(value2, rootElement.selectSingleNode("//input[@checked]"));
 	}
 
-	@Test
-	public void withoutItemsEnumBindTargetWithExplicitLabelsAndValues() throws Exception {
+	public void testWithoutItemsEnumBindTargetWithExplicitLabelsAndValues() throws Exception {
 		BeanWithEnum testBean = new BeanWithEnum();
 		testBean.setTestEnum(TestEnum.VALUE_2);
 		getPageContext().getRequest().setAttribute("testBean", testBean);
@@ -525,8 +510,7 @@ public class RadioButtonsTagTests extends AbstractFormTagTests {
 		assertEquals(value2, rootElement.selectSingleNode("//input[@checked]"));
 	}
 
-	@Test
-	public void withNullValue() throws Exception {
+	public void testWithNullValue() throws Exception {
 		try {
 			this.tag.setPath("name");
 			this.tag.doStartTag();
@@ -537,11 +521,10 @@ public class RadioButtonsTagTests extends AbstractFormTagTests {
 		}
 	}
 
-	@Test
-	public void hiddenElementOmittedOnDisabled() throws Exception {
+	public void testHiddenElementOmittedOnDisabled() throws Exception {
 		this.tag.setPath("stringArray");
 		this.tag.setItems(new Object[] {"foo", "bar", "baz"});
-		this.tag.setDisabled(true);
+		this.tag.setDisabled("true");
 		int result = this.tag.doStartTag();
 		assertEquals(Tag.SKIP_BODY, result);
 		String output = getOutput();
@@ -563,8 +546,7 @@ public class RadioButtonsTagTests extends AbstractFormTagTests {
 		assertEquals("foo", radioButtonElement.attribute("value").getValue());
 	}
 
-	@Test
-	public void spanElementCustomizable() throws Exception {
+	public void testSpanElementCustomizable() throws Exception {
 		this.tag.setPath("stringArray");
 		this.tag.setItems(new Object[] {"foo", "bar", "baz"});
 		this.tag.setElement("element");
@@ -581,8 +563,7 @@ public class RadioButtonsTagTests extends AbstractFormTagTests {
 		assertEquals("element", spanElement.getName());
 	}
 
-	@Test
-	public void dynamicTypeAttribute() throws JspException {
+	public void testDynamicTypeAttribute() throws JspException {
 		try {
 			this.tag.setDynamicAttribute(null, "type", "email");
 			fail("Expected exception");
@@ -620,7 +601,7 @@ public class RadioButtonsTagTests extends AbstractFormTagTests {
 		this.bean.setDate(getDate());
 		this.bean.setName("Rob Harrop");
 		this.bean.setJedi(true);
-		this.bean.setSomeBoolean(Boolean.TRUE);
+		this.bean.setSomeBoolean(new Boolean(true));
 		this.bean.setStringArray(new String[] {"bar", "foo"});
 		this.bean.setSomeIntegerArray(new Integer[] {new Integer(2), new Integer(1)});
 		this.bean.setOtherColours(colours);
